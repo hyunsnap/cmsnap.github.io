@@ -346,15 +346,24 @@ function NemoFrameMobile() {
     const onUp = (e) => { if (!mine(e)) return; drop(); };
     // 드래그 중 페이지 스크롤 차단 · passive:false 여야 preventDefault 가 실제로 먹는다
     const blockScroll = (e) => { if (e.cancelable) e.preventDefault(); };
+    // 안전장치: 어떤 이유로든 손 뗀 신호가 영영 안 오면(앱 전환·전화 수신 등) 15초 뒤 자동으로 내려놓는다.
+    // 드래그 중에는 스크롤을 막아두므로, 이동 상태가 갇히면 페이지가 안 움직이게 되는 것을 방지.
+    const watchdog = setTimeout(drop, 15000);
+    const onHide = () => { if (document.visibilityState === "hidden") drop(); };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointercancel", onUp);
+    window.addEventListener("blur", drop);
+    document.addEventListener("visibilitychange", onHide);
     document.addEventListener("touchmove", blockScroll, { passive: false });
     document.body.classList.add("nf-dragging");
     return () => {
+      clearTimeout(watchdog);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onUp);
+      window.removeEventListener("blur", drop);
+      document.removeEventListener("visibilitychange", onHide);
       document.removeEventListener("touchmove", blockScroll);
       document.body.classList.remove("nf-dragging");
     };
