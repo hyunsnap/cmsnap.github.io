@@ -1,0 +1,1396 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>네모프레임 · 모바일 액자 주문</title>
+<meta property="og:title" content="네모프레임 · 액자 사진 업로드">
+<meta property="og:description" content="주문하신 액자에 넣을 사진을 올려주세요">
+<meta property="og:image" content="https://photo-upload.co.kr/nemoframe/nemo_upload/nemo_logo.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://photo-upload.co.kr/nemoframe/nemo_upload/nemo_logo.jpg">
+<style>html,body{height:100%;margin:0;background:#F2F2F7;-webkit-text-size-adjust:100%}#root{min-height:100%}*{-webkit-tap-highlight-color:transparent}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Poor+Story&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<script crossorigin src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7/babel.min.js"></script>
+</head>
+<body>
+<div id="root">불러오는 중…</div>
+<script type="text/babel" data-presets="react">
+const { useRef, useState, useEffect, useCallback } = React;
+
+const ICON_PATHS = {
+  plus:"M5 12h14M12 5v14", x:"M18 6 6 18M6 6l12 12", check:"M20 6 9 17l-5-5",
+  chevronleft:"m15 18-6-6 6-6", chevrondown:"m6 9 6 6 6-6", chevronup:"m18 15-6-6-6 6",
+  download:"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3",
+  trash2:"M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6",
+  rotatecw:"M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5", rotateccw:"M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5",
+  refreshcw:"M3 2v6h6M21 12A9 9 0 0 0 6 5.3L3 8M21 22v-6h-6M3 12a9 9 0 0 0 15 6.7l3-2.7",
+  refreshccw:"M3 2v6h6M3 12a9 9 0 0 1 15-6.7L21 8M21 22v-6h-6M21 12a9 9 0 0 1-15 6.7L3 16",
+  move:"M5 9 2 12l3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20",
+  alerttriangle:"m10.29 3.86-8.18 14A2 2 0 0 0 3.83 21h16.34a2 2 0 0 0 1.72-3l-8.18-14a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01",
+  sparkles:"M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z",
+};
+function Ic({ name, size = 16, color = "currentColor", strokeWidth = 2, style }) {
+  const c = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: strokeWidth, strokeLinecap: "round", strokeLinejoin: "round", style: style };
+  if (name === "zoomin") return <svg {...c}><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg>;
+  if (name === "imageplus") return <svg {...c}><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"/><path d="M16 5h6M19 2v6"/><circle cx="9" cy="9" r="1.5"/><path d="M21 15l-4-4-9 9"/></svg>;
+  return <svg {...c}><path d={ICON_PATHS[name] || ""}/></svg>;
+}
+
+const INK = "#1C1C1E", SUBTLE = "#8E8E93", MUTED = "#AEAEB2", PAPER = "#F2F2F7", LINE = "#E5E5EA", GOLD = "#A9714B", RED = "#FF3B30", CARD = "#FFFFFF", BADGE_NEUTRAL = "#E5E5EA", TINT = "#F5ECE3", DANGER_TINT = "rgba(255,59,48,0.08)";
+const KAKAO_URL = "http://pf.kakao.com/_iUxieG/chat";
+const INSTA_URL = "https://www.instagram.com/nemo_frame";
+
+const MATERIALS = {
+  artview_silver: { name: "아트뷰", sub: "실버", edge: "#C6C9CE", edgePct: 0.006, artview: true },
+  artview_black: { name: "아트뷰", sub: "블랙", edge: "#1E1C1B", edgePct: 0.006, artview: true },
+  artlux: { name: "아트룩스", sub: "무테", edge: null, edgePct: 0 },
+  wood_black: { name: "우드", sub: "블랙", edge: "#2A2724", edgePct: 0.014, wood: true },
+  wood_walnut: { name: "우드", sub: "월넛", edge: "#6E4A30", edgePct: 0.014, wood: true },
+  wood_darkwalnut: { name: "우드", sub: "다크월넛", edge: "#3F2716", edgePct: 0.014, wood: true },
+  wood_gray: { name: "우드", sub: "다크그레이", edge: "#54514D", edgePct: 0.014, wood: true },
+  wood_ivory: { name: "우드", sub: "미색", edge: "#F8F2E4", edgePct: 0.014, wood: true },
+};
+const BORDER_COLORS = ["#FFFFFF", "#1C1B1A"];
+// 우드 여백 프리셋 (20×30in 기준 mm) · 실제 사이즈에 비례해 자동 스케일 · 우드는 자유 슬라이더가 아니라 이 3개 중 골라야 함
+const WOOD_GAPS = [
+  { label: "여백 없음", top: 0, bottom: 0, side: 0, inner: 0 },
+  { label: "간격 1", top: 32, bottom: 32, side: 30, inner: 30 },
+  { label: "간격 2", top: 90, bottom: 90, side: 45, inner: 25 },
+  { label: "간격 3", top: 25, bottom: 23, side: 25, inner: 13 },
+];
+
+// 9분할·3분할 주문가능 사이즈 (실제 판매 사이즈만)
+const SIZES = [
+  { w: 24, h: 36, u: "in", note: "30평대 아파트 추천" }, { w: 24, h: 34, u: "in" }, { w: 20, h: 30, u: "in", note: "기본 웨딩액자 사이즈" }, { w: 20, h: 24, u: "in" },
+  { w: 16, h: 24, u: "in" }, { w: 16, h: 20, u: "in" }, { w: 12, h: 17, u: "in" }, { w: 11, h: 14, u: "in" },
+];
+// 1컷 전용 미니 사이즈 (미니세트와 동일 규격) · 3·9컷에는 노출하지 않음
+const MINI_SIZES = [{ w: 5, h: 7, u: "in" }, { w: 6, h: 8, u: "in" }, { w: 8, h: 10, u: "in" }, { w: 8, h: 12, u: "in" }];
+const MINI_SETS = {
+  "3p": { label: "3p 미니세트", desc: "5×7 · 6×8 · 8×10 각 1개 (3장)",
+    frames: [{ w: 5, h: 7, u: "in" }, { w: 6, h: 8, u: "in" }, { w: 8, h: 10, u: "in" }] },
+  "5p": { label: "5p 미니세트", desc: "5×7 · 6×8 각 2개 + 8×10 1개 (5장)",
+    frames: [{ w: 5, h: 7, u: "in" }, { w: 5, h: 7, u: "in" }, { w: 6, h: 8, u: "in" }, { w: 6, h: 8, u: "in" }, { w: 8, h: 10, u: "in" }] },
+};
+const sizeId = (s) => `${s.w}x${s.h}${s.u}`;
+const toIn = (v, u) => (u === "cm" ? v / 2.54 : v);
+const sizeLabel = (s) => (s.u === "in"
+  ? `${s.w}×${s.h} in (${(s.w * 2.54).toFixed(1)}×${(s.h * 2.54).toFixed(1)}cm)`
+  : `${s.w}×${s.h} cm (${(s.w / 2.54).toFixed(0)}×${(s.h / 2.54).toFixed(0)}in)`) + (s.note ? ` · ${s.note}` : "");
+
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkKuoQIr7DoEZRYVu-Rkw56vQig5heZUAo3V6-0gfJJI_5t0_eJ4dQ6WflktEBjA/exec";
+
+const newCell = () => ({ src: null, panU: 0, panV: 0, scale: 1, rot: 0, natW: 0, natH: 0, retouch: null, landscape: false });
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+function place(cw, ch, nw, nh, p) {
+  if (!nw || !nh || !cw || !ch) return null;
+  const t = ((p.rot || 0) * Math.PI) / 180;
+  const c = Math.abs(Math.cos(t)), s = Math.abs(Math.sin(t));
+  const bw = cw * c + ch * s, bh = cw * s + ch * c;
+  const coverS = Math.max(bw / nw, bh / nh);
+  const zoom = p.scale || 1;
+  const Rw = nw * coverS * zoom, Rh = nh * coverS * zoom;
+  const ovU = Math.max(0, Rw - bw), ovV = Math.max(0, Rh - bh);
+  const offU = (p.panU || 0) * ovU / 2, offV = (p.panV || 0) * ovV / 2;
+  const cosT = Math.cos(t), sinT = Math.sin(t);
+  const offX = offU * cosT - offV * sinT, offY = offU * sinT + offV * cosT;
+  const cx = cw / 2 + offX, cy = ch / 2 + offY;
+  return { Rw, Rh, left: cx - Rw / 2, top: cy - Rh / 2, cx, cy, ovU, ovV, cosT, sinT };
+}
+
+
+function MiniFrame({ cols, rows, dir }) {
+  const w = dir === "portrait" ? 44 : 68, h = dir === "portrait" ? 66 : 44;
+  return (
+    <div style={{ width: w, height: h, background: "#2A2724", borderRadius: 2, padding: 2, flexShrink: 0 }}>
+      <div style={{ width: "100%", height: "100%", background: "#FFFFFF", padding: 3, boxSizing: "border-box", display: "grid", gridTemplateColumns: `repeat(${cols},1fr)`, gridTemplateRows: `repeat(${rows},1fr)`, gap: 2 }}>
+        {Array.from({ length: cols * rows }).map((_, i) => (<div key={i} style={{ background: "#D8CFC2", borderRadius: 1 }} />))}
+      </div>
+    </div>
+  );
+}
+
+function StepHeader({ step, total, title, sub, onBack }) {
+  return (
+    <div style={{ marginBottom: 18 }}>
+      {onBack && <button className="nf-back" onClick={onBack} style={{ marginBottom: 12 }}><Ic name="chevronleft" size={15} /> 이전</button>}
+      <div style={{ paddingLeft: 16 }}>
+        {step && <div style={{ fontSize: 11.5, color: GOLD, fontWeight: 800, marginBottom: 6, letterSpacing: .3 }}>STEP {step}{total ? ` / ${total}` : ""}</div>}
+        <div style={{ fontSize: 19, fontWeight: 800, color: INK, lineHeight: 1.4 }}>{title}</div>
+        {sub && <div style={{ fontSize: 12.5, color: SUBTLE, marginTop: 6, lineHeight: 1.55 }}>{sub}</div>}
+      </div>
+    </div>
+  );
+}
+
+function ChoiceRow({ icon, badgeBg, badgeColor, title, sub, tag, onClick, disabled }) {
+  return (
+    <button className="nf-choice" onClick={onClick} disabled={disabled}>
+      <div className="nf-choice-main">
+        {icon && <span className="nf-choice-badge" style={{ background: badgeBg || BADGE_NEUTRAL }}><i className={`ti ti-${icon}`} style={{ color: badgeColor || SUBTLE }} aria-hidden="true" /></span>}
+        <div>
+          <div className="nf-choice-title">{title}</div>
+          {sub && <div className="nf-choice-sub">{sub}</div>}
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+        {tag && <span className="nf-choice-tag">{tag}</span>}
+        <i className="ti ti-chevron-right" style={{ color: MUTED, fontSize: 16 }} aria-hidden="true" />
+      </div>
+    </button>
+  );
+}
+
+function NemoFrameMobile() {
+  const [screen, setScreen] = useState("intro");
+  const [dir, setDir] = useState("portrait");
+  const [layout, setLayout] = useState({ cuts: 9, cols: 3, rows: 3 });
+  const [cells, setCells] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [lockedIdx, setLockedIdx] = useState(null);   // 잠금(포커스) 모드: 이 칸만 조작 가능, 나머지는 어둡게+스크롤 보호
+  const [materialFamily, setMaterialFamily] = useState("");
+  const [material, setMaterial] = useState("");
+  const [outerMargin, setOuterMargin] = useState(0);   // mm · 우드(9분할 제외)만 자유 슬라이더로 조절
+  const [woodGapIdx, setWoodGapIdx] = useState(1);      // 우드 9분할은 프리셋 3개 중 선택 (0번 "여백없음" 제외하고 노출)
+  const [borderColor, setBorderColor] = useState("#FFFFFF");
+  const [size, setSize] = useState("");
+  const [designerFee, setDesignerFee] = useState(false);
+  const [uploadKind, setUploadKind] = useState("frame");
+  const [uploadPhotos, setUploadPhotos] = useState([]);
+  const [form, setForm] = useState({ from: "네이버스토어", name: "", date: "", phone: "", note: "" });
+  const [consent, setConsent] = useState(false);
+  const [consentOpen, setConsentOpen] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [orderInfoOpen, setOrderInfoOpen] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [previewSrc, setPreviewSrc] = useState(null);
+  const [orderConfirm, setOrderConfirm] = useState(false);
+  const [sendState, setSendState] = useState(null);
+  const [sendMsg, setSendMsg] = useState("");
+  const [setKind, setSetKind] = useState(null);
+  const [setFrames, setSetFrames] = useState([]);
+  const [cellSize, setCellSize] = useState({ w: 0, h: 0 });
+  const [gridSize, setGridSize] = useState({ w: 0, h: 0 });
+
+  const [moving, setMoving] = useState(false);
+  const [movePos, setMovePos] = useState({ x: 0, y: 0 });
+  const [hoverCell, setHoverCell] = useState(null);
+  const moveFromRef = useRef(null), hoverRef = useRef(null);
+  const movePointerRef = useRef(null); // 칸 이동을 시작한 손가락(pointerId) — 두 번째 손가락이 닿아도 드래그가 끊기지 않게
+  const fileRef = useRef(null), uploadRef = useRef(null), targetRef = useRef(0);
+  const dragRef = useRef(null), frameRef = useRef(null), firstCellRef = useRef(null);
+  const gestureRef = useRef(null);
+  const warnRef = useRef(null);
+  const boardWrapRef = useRef(null);
+  const cellsRef = useRef(cells); cellsRef.current = cells;
+  const selectedRef = useRef(selected); selectedRef.current = selected;
+  const lockedRef = useRef(lockedIdx); lockedRef.current = lockedIdx;
+  const cellRatioRef = useRef(1); // cellWcm/cellHcm 비율 — 터치 제스처가 최종 인화 비율과 동일한 높이로 계산하도록
+  const updateCell = useCallback((idx, patch) => setCells((prev) => { const n = prev.slice(); n[idx] = { ...n[idx], ...patch }; return n; }), []);
+  // 사진 칸을 터치하면 즉시 잠기고(스크롤 방지+나머지 화면 어둡게), 같은 칸을 다시 터치하면 잠금 해제
+  const toggleLock = useCallback((idx) => {
+    setLockedIdx((prev) => {
+      if (prev === idx) { setSelected(null); return null; } // 잠금 해제 시 흐린 미리보기도 같이 꺼야 함
+      setSelected(idx);
+      return idx;
+    });
+  }, []);
+  const unlock = useCallback(() => { setLockedIdx(null); setSelected(null); }, []);
+
+  const count = layout.cols * layout.rows;
+  const filled = cells.filter((c) => c.src).length;
+  const retouchCount = cells.filter((c) => c.retouch).length;
+  const retouchBasicCount = cells.filter((c) => c.retouch === "basic").length;
+  const retouchDetailCount = cells.filter((c) => c.retouch === "detail").length;
+  const retouchTotalWon = retouchBasicCount * 5000 + retouchDetailCount * 10000;
+  const sizeOptions = layout.cuts === 1 ? [...MINI_SIZES, ...SIZES] : SIZES;
+  const sz = sizeOptions.find((s) => sizeId(s) === size) || SIZES[2];
+  const wIn = toIn(sz.w, sz.u), hIn = toIn(sz.h, sz.u);
+  const fwIn = dir === "portrait" ? Math.min(wIn, hIn) : Math.max(wIn, hIn);
+  const fhIn = dir === "portrait" ? Math.max(wIn, hIn) : Math.min(wIn, hIn);
+  const safeMM = 8;
+  const ratioStr = `${fwIn} / ${fhIn}`;
+  const mtl = MATERIALS[material] || MATERIALS[Object.keys(MATERIALS)[0]];
+  const isArtview = material.startsWith("artview"), isWood = material.startsWith("wood"), isArtlux = material === "artlux";
+  const isWood9 = isWood && layout.cuts === 9; // 우드 9분할만 제작 가능한 3개 프리셋, 그 외 우드(3분할 등)는 자유 슬라이더
+
+  // ===== 여백: 데스크탑(홈페이지) 기준과 동일한 재질별 규칙 =====
+  // 아트뷰: 사진 사이 4mm 고정(테두리 없음), 아트룩스: 여백 전혀 없음(꽉 채움), 우드만 바깥여백+사진사이간격 존재
+  const sX = fwIn / 20, sY = fhIn / 30; // 20×30in 기준값을 실제 사이즈에 비례해 스케일
+  const wg = WOOD_GAPS[woodGapIdx];
+  const wOuterTop = isWood9 ? Math.round(wg.top * sY) : outerMargin;
+  const wOuterBottom = isWood9 ? Math.round(wg.bottom * sY) : outerMargin;
+  const wOuterSide = isWood9 ? Math.round(wg.side * sX) : outerMargin;
+  const wInner = isWood9 ? Math.round(wg.inner * ((sX + sY) / 2)) : Math.min(outerMargin, 20);
+  const outerTopMm = layout.cuts === 1 ? 0 : isWood ? wOuterTop : 0;
+  const outerBottomMm = layout.cuts === 1 ? 0 : isWood ? wOuterBottom : 0;
+  const outerSideMm = layout.cuts === 1 ? 0 : isWood ? wOuterSide : 0;
+  const innerGapMm = layout.cuts === 1 ? 0 : isWood ? wInner : (isArtview ? 4 : 0);
+  const gapColor = isArtview ? (material === "artview_black" ? "#1C1B1A" : "#FFFFFF") : borderColor;
+
+  const cellWcm = size ? Math.max(0, (fwIn * 25.4 - outerSideMm * 2 - innerGapMm * (layout.cols - 1)) / layout.cols) / 10 : 0;
+  const cellHcm = size ? Math.max(0, (fhIn * 25.4 - outerTopMm - outerBottomMm - innerGapMm * (layout.rows - 1)) / layout.rows) / 10 : 0;
+  cellRatioRef.current = cellWcm > 0 ? cellHcm / cellWcm : 1;
+
+  // ===== 메인 그리드 칸의 정확한 크기: CSS 1fr 트랙은 브라우저가 나머지 픽셀을 뒤쪽 칸에 더 줄 수 있어서
+  // (예: 2·3번째 칸이 1번보다 1px 넓어짐) 그 칸에서 사진 오른쪽이 살짝 안 덮이는 문제가 있었음.
+  // 정수 픽셀로 반올림하면(최종 인화파일=캔버스는 정수 픽셀이 필요해서 그렇게 함) 미리보기 화면 크기(작음) 기준으로는
+  // 그 반올림 오차가 비율적으로 더 크게 느껴짐. 미리보기는 캔버스가 아니라 CSS라 소수점 px도 정확히 그려지므로,
+  // 반올림하지 않고 모든 칸에 동일한 소수점 크기를 그대로 써서 물리적 비율과 최대한 가깝게 맞춘다(오차를 최소화).
+  const gridMmToPx = (gridSize.w && fwIn) ? gridSize.w / (fwIn * 25.4) : 0;
+  const gridMetrics = {
+    mountPad: gridMmToPx * 5,
+    outerTopPx: gridMmToPx * outerTopMm,
+    outerSidePx: gridMmToPx * outerSideMm,
+    outerBottomPx: gridMmToPx * outerBottomMm,
+    gapPxGrid: gridMmToPx * innerGapMm,
+    colWidths: [], rowHeights: [],
+  };
+  {
+    const areaWpx = Math.max(0, gridSize.w - gridMetrics.mountPad * 2 - gridMetrics.outerSidePx * 2);
+    const areaHpx = Math.max(0, gridSize.h - gridMetrics.mountPad * 2 - gridMetrics.outerTopPx - gridMetrics.outerBottomPx);
+    const cwCss = layout.cols ? (areaWpx - gridMetrics.gapPxGrid * (layout.cols - 1)) / layout.cols : 0;
+    const chCss = layout.rows ? (areaHpx - gridMetrics.gapPxGrid * (layout.rows - 1)) / layout.rows : 0;
+    gridMetrics.colWidths = Array.from({ length: layout.cols }, () => cwCss);
+    gridMetrics.rowHeights = Array.from({ length: layout.rows }, () => chCss);
+  }
+
+  useEffect(() => {
+    window.history.replaceState({ screen: "intro" }, "", "");
+    const onPopState = (e) => {
+      if (e.state && e.state.screen) setScreen(e.state.screen);
+      else setScreen("intro");
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  const goScreen = useCallback((scr) => {
+    window.history.pushState({ screen: scr }, "", "");
+    setScreen(scr);
+  }, []);
+  const goIntro = useCallback(() => {
+    window.history.pushState({ screen: "intro" }, "", "");
+    setScreen("intro");
+  }, []);
+
+  useEffect(() => {
+    if (screen !== "build" && screen !== "setBuild") return;
+    const measure = () => {
+      const f = frameRef.current; if (f) { const r = f.getBoundingClientRect(); if (r.width) setGridSize({ w: r.width, h: r.height }); }
+      const el = firstCellRef.current; if (el) { const r = el.getBoundingClientRect(); if (r.width) setCellSize({ w: r.width, h: r.height }); }
+    };
+    const id = requestAnimationFrame(measure);
+    const t1 = setTimeout(measure, 60), t2 = setTimeout(measure, 200);
+    const ro = new ResizeObserver(measure);
+    if (frameRef.current) ro.observe(frameRef.current);
+    if (firstCellRef.current) ro.observe(firstCellRef.current);
+    window.addEventListener("resize", measure);
+    return () => { cancelAnimationFrame(id); clearTimeout(t1); clearTimeout(t2); ro.disconnect(); window.removeEventListener("resize", measure); };
+  }, [screen, layout, size, dir, material, outerMargin, woodGapIdx]);
+
+  useEffect(() => {
+    if (screen !== "build") return;
+    const el = boardWrapRef.current; if (!el) return;
+    const onWheelNative = (e) => {
+      const cell = e.target.closest && e.target.closest(".nf-cell");
+      if (!cell || cell.dataset.cellidx == null) return;
+      const idx = parseInt(cell.dataset.cellidx);
+      const c = cellsRef.current[idx];
+      if (!c || !c.src) return;
+      e.preventDefault();
+      setCells((prev) => { const n = prev.slice(); const t = n[idx]; if (t && t.src) n[idx] = { ...t, scale: clamp(t.scale + (e.deltaY < 0 ? 0.08 : -0.08), 1, 3) }; return n; });
+    };
+    el.addEventListener("wheel", onWheelNative, { passive: false });
+    return () => el.removeEventListener("wheel", onWheelNative);
+  }, [screen]);
+
+  // 칸 이동(롱프레스 드래그) 중 처리.
+  // [고쳐진 버그] 손님이 사진 순서를 바꿔도 처음 올린 순서 그대로 주문서에 저장되던 문제.
+  //  원인1) .nf-cell 이 touch-action:pan-y 라서, 사진을 꾹 눌러 잡은 뒤 손가락을 위/아래로 움직이면
+  //         브라우저가 페이지 스크롤을 시작하면서 pointercancel 을 쏜다. 그런데 여기서는 pointerup 만
+  //         듣고 있었기 때문에 '내려놓기'가 아예 실행되지 않았고 → setCells 교체가 안 일어남
+  //         → cells 는 업로드 당시 순서 그대로 → buildComposite/주문서도 원래 순서로 저장됨.
+  //         (가로로 짧게 옮길 때만 우연히 성공해서 '됐다 안 됐다' 하는 것처럼 보였음)
+  //  원인2) 우드 넓은여백처럼 칸 사이 간격이 큰 배치에서 손가락을 여백 위에서 떼면
+  //         elementFromPoint 가 칸을 못 찾아 hoverRef 가 null 이 되고, 역시 교체가 취소됐음.
+  // 해결) 드래그 중에는 touchmove 를 preventDefault 해서 스크롤이 시작되지 못하게 막고(=취소 자체를 예방),
+  //       그래도 취소되면 pointercancel 도 pointerup 과 똑같이 '내려놓기'로 처리하고,
+  //       마지막으로 지나간 칸을 기억해 여백 위에서 떼도 그 칸에 놓이게 한다.
+  useEffect(() => {
+    if (!moving) return;
+    const mine = (e) => movePointerRef.current == null || e.pointerId === movePointerRef.current;
+    const onMove = (e) => {
+      if (!mine(e)) return;
+      setMovePos({ x: e.clientX, y: e.clientY });
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const t = el && el.closest ? el.closest("[data-cellidx]") : null;
+      const idx = t ? Number(t.getAttribute("data-cellidx")) : null;
+      if (idx == null || Number.isNaN(idx)) return;   // 칸 사이 여백 위를 지나가는 중 — 직전 칸을 그대로 유지
+      hoverRef.current = idx; setHoverCell(idx);
+    };
+    const drop = () => {
+      const from = moveFromRef.current, to = hoverRef.current;
+      if (from != null && to != null && from !== to) { setCells((prev) => { const n = prev.slice(); const tmp = n[from]; n[from] = n[to]; n[to] = tmp; return n; }); setSelected(to); }
+      moveFromRef.current = null; hoverRef.current = null; movePointerRef.current = null; setHoverCell(null); setMoving(false);
+    };
+    const onUp = (e) => { if (!mine(e)) return; drop(); };
+    // 드래그 중 페이지 스크롤 차단 · passive:false 여야 preventDefault 가 실제로 먹는다
+    const blockScroll = (e) => { if (e.cancelable) e.preventDefault(); };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    document.addEventListener("touchmove", blockScroll, { passive: false });
+    document.body.classList.add("nf-dragging");
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      document.removeEventListener("touchmove", blockScroll);
+      document.body.classList.remove("nf-dragging");
+    };
+  }, [moving]);
+
+  const chooseFrame = (cuts) => {
+    let cols = 1, rows = 1;
+    if (cuts === 9) { cols = 3; rows = 3; } else if (cuts === 3) { if (dir === "portrait") { cols = 1; rows = 3; } else { cols = 3; rows = 1; } }
+    setLayout({ cuts, cols, rows });
+    setCells(Array.from({ length: cols * rows }, newCell));
+    setSetKind(null); setSelected(null); setLockedIdx(null); setSize(""); setCellSize({ w: 0, h: 0 }); setGridSize({ w: 0, h: 0 });
+    goScreen("sizePick");
+  };
+
+  const chooseSet = (kind) => {
+    const frames = MINI_SETS[kind].frames;
+    setSetKind(kind); setSetFrames(frames);
+    setDir("portrait"); setSize(sizeId(frames[0])); setLayout({ cuts: frames.length, cols: frames.length, rows: 1 });
+    setCells(frames.map(() => newCell())); setSelected(null); setLockedIdx(null);
+    setCellSize({ w: 0, h: 0 }); setGridSize({ w: 0, h: 0 }); setShowPopup(true); goScreen("setBuild");
+  };
+
+  const buildSetFrame = async (cell, fsize, opts = {}) => {
+    const short = Math.min(toIn(fsize.w, fsize.u), toIn(fsize.h, fsize.u));
+    const long = Math.max(toIn(fsize.w, fsize.u), toIn(fsize.h, fsize.u));
+    const land = cell && cell.landscape;
+    const fw = land ? long : short, fh = land ? short : long;
+    const scale = opts.preview ? 90 : 300;
+    const pw = Math.round(fw * scale), ph = Math.round(fh * scale), m = Math.min(pw, ph);
+    const cv = document.createElement("canvas"); cv.width = pw; cv.height = ph;
+    const ctx = cv.getContext("2d");
+    ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, pw, ph);
+    if (cell && cell.src) {
+      const img = await new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.src = cell.src; });
+      const pl = place(pw, ph, img.naturalWidth, img.naturalHeight, cell);
+      if (pl) { ctx.save(); ctx.beginPath(); ctx.rect(0, 0, pw, ph); ctx.clip(); ctx.translate(pl.cx, pl.cy); ctx.rotate(((cell.rot || 0) * Math.PI) / 180); ctx.drawImage(img, -pl.Rw / 2, -pl.Rh / 2, pl.Rw, pl.Rh); ctx.restore(); }
+    }
+    if (opts.safety) {
+      const mmPx = scale / 25.4, cut3 = Math.round(5 * mmPx), safe7 = Math.round(safeMM * mmPx), lw = Math.max(1.5, Math.round(m * 0.004));
+      ctx.strokeStyle = "rgba(226,42,42,0.95)"; ctx.lineWidth = lw; ctx.strokeRect(cut3, cut3, pw - cut3 * 2, ph - cut3 * 2);
+      ctx.strokeStyle = "rgba(35,110,240,0.95)"; ctx.lineWidth = lw + 1; ctx.strokeRect(safe7, safe7, pw - safe7 * 2, ph - safe7 * 2);
+    }
+    if (opts.watermark) { ctx.save(); ctx.translate(pw / 2, ph / 2); ctx.rotate(-Math.PI / 4); ctx.fillStyle = "rgba(255,255,255,0.15)"; ctx.font = `bold ${Math.round(m * 0.13)}px sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; const diag = Math.sqrt(pw * pw + ph * ph); for (let x = -diag; x < diag; x += m * 0.55) { for (let y = -diag; y < diag; y += m * 0.28) { ctx.fillText("nemoframe", x, y); } } ctx.restore(); }
+    return cv;
+  };
+  const collectSetCells = () => cells;
+
+  const generateSetPreviewCanvas = async () => {
+    const store = collectSetCells();
+    const pad = 44, gap = 34, ppi = 42, labelH = 26;
+    const dims = setFrames.map((f, i) => { const s = Math.min(toIn(f.w, f.u), toIn(f.h, f.u)) * ppi, l = Math.max(toIn(f.w, f.u), toIn(f.h, f.u)) * ppi; const land = store[i] && store[i].landscape; return land ? { w: l, h: s } : { w: s, h: l }; });
+    const boardW = dims.reduce((a, d) => a + d.w, 0) + gap * (dims.length - 1) + pad * 2;
+    const boardH = Math.max(...dims.map((d) => d.h)) + pad * 2 + labelH + 40;
+    const board = document.createElement("canvas"); board.width = Math.round(boardW); board.height = Math.round(boardH);
+    const bx = board.getContext("2d"); bx.fillStyle = "#FFFFFF"; bx.fillRect(0, 0, board.width, board.height);
+
+    bx.fillStyle = "#E2503C"; bx.font = "bold 14px sans-serif"; bx.textAlign = "left";
+    bx.fillText("※ 빨간선은 재단선", pad, pad);
+    bx.fillStyle = "#236EF0";
+    bx.fillText("※ 파란선은 안전선", pad, pad + 20);
+
+    const baseY = boardH - pad - labelH;
+    let x = pad;
+    for (let i = 0; i < setFrames.length; i++) {
+      const cv = await buildSetFrame(store[i], setFrames[i], { preview: true, watermark: true, safety: true });
+      const d = dims[i], y = baseY - d.h;
+      bx.drawImage(cv, x, y, d.w, d.h);
+      bx.fillStyle = "#888"; bx.font = "14px sans-serif"; bx.textAlign = "center";
+      bx.fillText(`${setFrames[i].w}×${setFrames[i].h}${setFrames[i].u}`, x + d.w / 2, y + d.h + 18);
+      x += d.w + gap;
+    }
+    return board;
+  };
+
+  const openSetPreview = async () => {
+    const board = await generateSetPreviewCanvas();
+    setPreviewSrc(board.toDataURL("image/jpeg", 0.9));
+  };
+
+  const submitSet = async () => {
+    const store = collectSetCells();
+    if (store.some((c) => !c.src)) return showToast("아직 사진이 안 들어간 액자가 있어요");
+    if (!form.name || !form.phone) return showToast("성함과 연락처를 입력해 주세요");
+    if (!consent) return showToast("개인정보 수집·이용 동의가 필요합니다");
+    const folderName = `${today8()}_${form.name}_${setKind}미니세트`;
+    const lines = ["[미니세트 주문]", `상품: ${MINI_SETS[setKind].label}`, `주문처: ${form.from}`, `주문자명: ${form.name}`, `연락처: ${form.phone}`, `받아야하는날짜: ${form.date || "미정"}`, `요청사항: ${form.note || ""}`, "", "[액자별 값] (배율=배수 · panU/panV=위치 -1~1 · 회전=도)"];
+    const files = [];
+
+    for (let i = 0; i < setFrames.length; i++) {
+      const f = setFrames[i], c = store[i];
+      lines.push(`${i + 1}번 (${f.w}×${f.h}${f.u}): 배율 ${c.scale.toFixed(2)}배 / panU ${(c.panU || 0).toFixed(3)} / panV ${(c.panV || 0).toFixed(3)} / 회전 ${c.rot}도`);
+      const cv = await buildSetFrame(c, f);
+      const finalBlob = await _jpegWithDpi(cv, 300);
+      files.push({ name: `${form.name}_${i + 1}_${f.w}x${f.h}${f.u}_공장발주용.jpg`, mime: "image/jpeg", data: await _blobToBase64(finalBlob), subFolder: "최종본" });
+    }
+
+    const previewBoard = await generateSetPreviewCanvas();
+    files.push({ name: `${form.name}_${MINI_SETS[setKind].label.replace(/\s/g, "")}_미리보기.jpg`, mime: "image/jpeg", data: dataB64(previewBoard.toDataURL("image/jpeg", 0.85)), subFolder: "인쇄미리보기" });
+
+    if (!APPS_SCRIPT_URL) return showToast("주문 접수 (데모 · 드라이브 미연결)");
+    try { setSendState("sending"); setSendMsg("전송 준비 중…"); await sendToDrive(folderName, lines.join("\n"), files); setSendState("done"); }
+    catch (e) { setSendState(null); showToast("전송 실패 · 잠시 후 다시 시도해 주세요"); }
+  };
+
+  const openUpload = (kind) => { setSetKind(null); setUploadKind(kind); setUploadPhotos([]); goScreen("designer"); };
+  const openAlbum = () => goScreen("albumSoon");
+  const openPicker = (idx) => {
+    if (!setKind && !material) return showToast("액자 종류(재질)를 먼저 선택해 주세요");
+    if (!setKind && !size) return showToast("액자 사이즈를 먼저 선택해 주세요");
+    targetRef.current = idx; if (fileRef.current) { fileRef.current.value = ""; fileRef.current.click(); }
+  };
+  const readFiles = (files) => Promise.all(files.map((f) => new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(f); })));
+
+  const onFiles = (e) => {
+    const files = Array.from(e.target.files || []); if (!files.length) return;
+    const idx = targetRef.current;
+    readFiles(files).then((srcs) => {
+      setCells((prev) => {
+        const next = prev.slice(); let p = idx;
+        for (const src of srcs) { while (p < next.length && next[p].src && p !== idx) p++; if (p >= next.length) break; next[p] = { ...newCell(), src }; p++; while (p < next.length && next[p].src) p++; }
+        return next;
+      });
+      setSelected(idx);
+    });
+  };
+  const onUploadFiles = (e) => { const files = Array.from(e.target.files || []); if (!files.length) return; const max = uploadKind === "album" ? 100 : 10; readFiles(files).then((srcs) => setUploadPhotos((prev) => [...prev, ...srcs].slice(0, max))); };
+
+  // 모바일 터치 제스처: 손가락 1개로 잠깐 누르면 스크롤(아무것도 안 함),
+  // 손가락 1개로 꾹 누르고 있으면(롱프레스) 칸 이동 모드 시작,
+  // 손가락 2개(핀치)로는 확대/축소 · 회전 · 위치이동을 동시에 처리.
+  useEffect(() => {
+    const LONG_PRESS_MS = 450, MOVE_THRESHOLD = 10;
+    const onDown = (e) => {
+      if (e.pointerType !== "touch") return;
+      const directCellEl = e.target.closest && e.target.closest("[data-cellidx]");
+      let idx, cellEl, offCell = false;
+      if (lockedRef.current != null) {
+        // 잠긴 칸이 있으면 화면 어디를 터치해도(액자 밖이어도) 그 칸을 확대/회전/이동 대상으로 삼음 — 액자는 고정돼 있으니까
+        idx = lockedRef.current;
+        cellEl = document.querySelector(`[data-cellidx="${idx}"]`);
+        offCell = directCellEl !== cellEl;
+      } else {
+        cellEl = directCellEl;
+        idx = cellEl ? Number(cellEl.getAttribute("data-cellidx")) : null;
+      }
+      if (!cellEl || idx == null || !cellsRef.current[idx] || !cellsRef.current[idx].src) return;
+      const noReorder = !!(cellEl.classList && cellEl.classList.contains("hscroll")); // 미니세트는 액자 크기가 제각각이라 칸 이동(롱프레스) 없이 가로 스크롤만 되게 함
+      let g = gestureRef.current;
+      if (!g || g.idx !== idx) {
+        g = { idx, el: cellEl, pointers: new Map(), mode: "pending", timer: null };
+        gestureRef.current = g;
+      }
+      g.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (g.pointers.size === 1) {
+        g.startX = e.clientX; g.startY = e.clientY;
+        if (!offCell && !noReorder) {
+          const pid = e.pointerId, px = e.clientX, py = e.clientY;   // 타이머가 도는 사이 이벤트 객체가 재활용돼도 안전하게 값만 복사
+          g.timer = setTimeout(() => {
+            const gg = gestureRef.current;
+            if (!gg || gg.mode !== "pending") return;
+            gg.mode = "longpress";
+            moveFromRef.current = idx;
+            hoverRef.current = idx;          // 손가락을 거의 안 움직이고 떼도 놓을 자리를 잃지 않도록 시작 칸으로 초기화
+            movePointerRef.current = pid;
+            setSelected(idx);
+            setMovePos({ x: px, y: py });
+            setMoving(true);
+            gestureRef.current = null; // 이후는 기존 이동 로직(moving 이펙트)이 전담
+          }, LONG_PRESS_MS);
+        }
+      } else if (g.pointers.size === 2) {
+        if (g.timer) { clearTimeout(g.timer); g.timer = null; }
+        if (lockedRef.current !== idx) return; // 잠긴 칸이 아니면 두 손가락 제스처를 시작하지 않음
+        g.mode = "pinch";
+        const pts = Array.from(g.pointers.values());
+        const c = cellsRef.current[idx];
+        const r = cellEl.getBoundingClientRect();
+        const rH = noReorder ? r.height : r.width * cellRatioRef.current; // 미니세트 칸은 실측 그대로, 메인 그리드 칸은 최종 인화 비율로 보정
+        const pl = place(r.width, rH, c.natW, c.natH, c) || {};
+        g.d0 = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+        g.a0 = Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x) * 180 / Math.PI;
+        g.mx0 = (pts[0].x + pts[1].x) / 2; g.my0 = (pts[0].y + pts[1].y) / 2;
+        g.scale0 = c.scale; g.rot0 = c.rot; g.panU0 = c.panU || 0; g.panV0 = c.panV || 0;
+        g.cosT0 = pl.cosT ?? 1; g.sinT0 = pl.sinT ?? 0; g.ovU0 = pl.ovU || 0; g.ovV0 = pl.ovV || 0;
+      }
+    };
+    const onMove = (e) => {
+      const g = gestureRef.current;
+      if (!g || !g.pointers.has(e.pointerId)) return;
+      g.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (g.mode === "pending") {
+        const dx0 = e.clientX - g.startX, dy0 = e.clientY - g.startY;
+        if (Math.hypot(dx0, dy0) > MOVE_THRESHOLD) {
+          if (g.timer) clearTimeout(g.timer);
+          if (lockedRef.current === g.idx) {
+            // 잠긴(포커스) 칸이면 한 손가락 드래그로 사진 위치(팬) 이동
+            g.mode = "pan";
+            const c = cellsRef.current[g.idx];
+            const r = g.el.getBoundingClientRect();
+            const isHscroll = !!(g.el.classList && g.el.classList.contains("hscroll"));
+            const rH = isHscroll ? r.height : r.width * cellRatioRef.current;
+            const pl = place(r.width, rH, c.natW, c.natH, c) || {};
+            g.panU0 = c.panU || 0; g.panV0 = c.panV || 0;
+            g.cosT0 = pl.cosT ?? 1; g.sinT0 = pl.sinT ?? 0; g.ovU0 = pl.ovU || 0; g.ovV0 = pl.ovV || 0;
+          } else {
+            g.mode = "scroll";
+          }
+        }
+        return;
+      }
+      if (g.mode === "pan") {
+        e.preventDefault();
+        const dx = e.clientX - g.startX, dy = e.clientY - g.startY;
+        const dU = dx * g.cosT0 + dy * g.sinT0, dV = -dx * g.sinT0 + dy * g.cosT0;
+        const newPanU = clamp(g.ovU0 ? g.panU0 + (2 * dU) / g.ovU0 : g.panU0, -1, 1);
+        const newPanV = clamp(g.ovV0 ? g.panV0 + (2 * dV) / g.ovV0 : g.panV0, -1, 1);
+        updateCell(g.idx, { panU: newPanU, panV: newPanV });
+        return;
+      }
+      if (g.mode !== "pinch" || g.pointers.size < 2) return;
+      e.preventDefault();
+      const pts = Array.from(g.pointers.values());
+      const d = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+      const a = Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x) * 180 / Math.PI;
+      const mx = (pts[0].x + pts[1].x) / 2, my = (pts[0].y + pts[1].y) / 2;
+      const newScale = clamp(g.scale0 * (d / (g.d0 || d)), 1, 3);
+      let newRot = g.rot0 + (a - g.a0);
+      newRot = ((newRot + 180) % 360 + 360) % 360 - 180;
+      const dx = mx - g.mx0, dy = my - g.my0;
+      const dU = dx * g.cosT0 + dy * g.sinT0, dV = -dx * g.sinT0 + dy * g.cosT0;
+      const newPanU = clamp(g.ovU0 ? g.panU0 + (2 * dU) / g.ovU0 : g.panU0, -1, 1);
+      const newPanV = clamp(g.ovV0 ? g.panV0 + (2 * dV) / g.ovV0 : g.panV0, -1, 1);
+      updateCell(g.idx, { scale: newScale, rot: Math.round(newRot), panU: newPanU, panV: newPanV });
+    };
+    const onUp = (e) => {
+      const g = gestureRef.current;
+      if (!g) return;
+      if (g.timer) { clearTimeout(g.timer); g.timer = null; }
+      g.pointers.delete(e.pointerId);
+      if (g.pointers.size === 0) gestureRef.current = null;
+      else if (g.mode === "pinch") gestureRef.current = null;
+    };
+    window.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove, { passive: false });
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, [updateCell]);
+  const removeCell = (idx) => { updateCell(idx, newCell()); setSelected(null); setLockedIdx((p) => (p === idx ? null : p)); };
+  const resetCell = (idx) => updateCell(idx, { panU: 0, panV: 0, scale: 1, rot: 0 });
+  const resetAll = () => { setCells(Array.from({ length: count }, newCell)); setSelected(null); setLockedIdx(null); };
+
+  const getAvgHue = (src) => new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const s = 16;
+      const cv = document.createElement("canvas"); cv.width = s; cv.height = s;
+      const ctx = cv.getContext("2d"); ctx.drawImage(img, 0, 0, s, s);
+      const data = ctx.getImageData(0, 0, s, s).data;
+      let r = 0, g = 0, b = 0, n = 0;
+      for (let i = 0; i < data.length; i += 4) { r += data[i]; g += data[i + 1]; b += data[i + 2]; n++; }
+      r /= n; g /= n; b /= n;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+      let h = 0;
+      if (d !== 0) {
+        if (max === r) h = ((g - b) / d) % 6;
+        else if (max === g) h = (b - r) / d + 2;
+        else h = (r - g) / d + 4;
+        h *= 60; if (h < 0) h += 360;
+      }
+      resolve(h);
+    };
+    img.onerror = () => resolve(Math.random() * 360);
+    img.src = src;
+  });
+  const aiArrange = async () => {
+    const filledIdx = cells.map((c, i) => (c.src ? i : -1)).filter((i) => i >= 0);
+    if (filledIdx.length < 2) return showToast("사진이 2장 이상 있어야 AI배치를 쓸 수 있어요");
+    showToast("AI가 분위기를 분석하고 있어요…");
+    const photos = cells.filter((c) => c.src);
+    const empties = cells.filter((c) => !c.src);
+    const withHue = await Promise.all(photos.map(async (c) => ({ c, hue: await getAvgHue(c.src) })));
+    for (let i = withHue.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = withHue[i]; withHue[i] = withHue[j]; withHue[j] = t; }
+    setCells(withHue.map((x) => x.c).concat(empties));
+    setSelected(0);
+    showToast("AI배치 완료 · 다시 누르면 다른 배치가 나와요 ✨");
+  };
+
+  const onPointerDown = (e, idx) => {
+    if (!cells[idx].src) return;
+    // 모바일 터치는 항상 '선택'만 하고 그대로 흘려보냄(스크롤이 절대 막히지 않도록).
+    // 사진 위치 조정(드래그)은 마우스/트랙패드에서만 동작 — 터치에서는 아래 배율/회전 슬라이더로 조정.
+    if (e.pointerType === "touch") { setSelected(idx); return; }
+    e.preventDefault();
+    setSelected(idx);
+    const r = e.currentTarget.getBoundingClientRect();
+    const rH = cellWcm > 0 ? r.width * (cellHcm / cellWcm) : r.height; // 미리보기 크롭이 최종 인화 파일과 어긋나지 않도록 실측 대신 물리비율로 계산
+    dragRef.current = { idx, sx: e.clientX, sy: e.clientY, u: cells[idx].panU, v: cells[idx].panV, ...(place(r.width, rH, cells[idx].natW, cells[idx].natH, cells[idx]) || {}) };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+  const onPointerMove = (e) => {
+    const d = dragRef.current; if (!d) return;
+    const dx = e.clientX - d.sx, dy = e.clientY - d.sy;
+    const cosT = d.cosT ?? 1, sinT = d.sinT ?? 0;
+    const dU = dx * cosT + dy * sinT, dV = -dx * sinT + dy * cosT;
+    updateCell(d.idx, { panU: clamp(d.ovU ? d.u + (2 * dU) / d.ovU : d.u, -1, 1), panV: clamp(d.ovV ? d.v + (2 * dV) / d.ovV : d.v, -1, 1) });
+  };
+  const onPointerUp = () => { dragRef.current = null; };
+
+  const buildComposite = async (isDownload = false, photoOnly = false, fullRes = false) => {
+    let pw, ph;
+    if (isDownload && !fullRes) {
+      const maxSize = 1000;
+      if (fwIn >= fhIn) { pw = maxSize; ph = Math.round(maxSize * (fhIn / fwIn)); }
+      else { ph = maxSize; pw = Math.round(maxSize * (fwIn / fhIn)); }
+    } else {
+      pw = Math.round(fwIn * 300); ph = Math.round(fhIn * 300);
+    }
+    const cv = document.createElement("canvas"); cv.width = pw; cv.height = ph;
+    const ctx = cv.getContext("2d");
+    const m = Math.min(pw, ph);
+    const gapCol = gapColor; // 아트뷰는 테두리색(블랙/실버)에 맞춰 자동 결정, 그 외 재질은 손님이 고른 흰/검 중 선택
+    const pxPerMM = pw / (fwIn * 25.4);
+    const marginTopPx = Math.round(outerTopMm * pxPerMM), marginBottomPx = Math.round(outerBottomMm * pxPerMM);
+    const marginSidePx = Math.round(outerSideMm * pxPerMM), gapInnerPx = Math.round(innerGapMm * pxPerMM);
+    if (photoOnly) { ctx.fillStyle = gapCol; ctx.fillRect(0, 0, pw, ph); }
+    else {
+      const edgePx = Math.round(m * mtl.edgePct);
+      ctx.fillStyle = mtl.edge || gapCol; ctx.fillRect(0, 0, pw, ph);
+      ctx.fillStyle = gapCol; ctx.fillRect(edgePx, edgePx, pw - edgePx * 2, ph - edgePx * 2);
+    }
+    const ax = marginSidePx, ay = marginTopPx, gapPx = gapInnerPx;
+    const aw = pw - marginSidePx * 2, ah = ph - marginTopPx - marginBottomPx;
+    const cw = (aw - gapPx * (layout.cols - 1)) / layout.cols, ch = (ah - gapPx * (layout.rows - 1)) / layout.rows;
+    const load = (src) => new Promise((res) => { const im = new Image(); im.onload = () => res(im); im.src = src; });
+
+    for (let i = 0; i < count; i++) {
+      const col = i % layout.cols, row = Math.floor(i / layout.cols);
+      const gxF = ax + col * (cw + gapPx), gyF = ay + row * (ch + gapPx);
+      const dx = Math.round(gxF), dy = Math.round(gyF);
+      const cwR = Math.round(gxF + cw) - dx, chR = Math.round(gyF + ch) - dy;
+      const cell = cells[i];
+      ctx.save(); ctx.beginPath(); ctx.rect(dx, dy, cwR, chR); ctx.clip();
+      if (cell.src) { const img = await load(cell.src); const pl = place(cwR, chR, img.naturalWidth, img.naturalHeight, cell); if (pl) { ctx.translate(dx + pl.cx, dy + pl.cy); ctx.rotate(((cell.rot || 0) * Math.PI) / 180); ctx.drawImage(img, -pl.Rw / 2, -pl.Rh / 2, pl.Rw, pl.Rh); } }
+      else { ctx.fillStyle = photoOnly ? gapCol : "#EAE4DB"; ctx.fillRect(dx, dy, cwR, chR); }
+      ctx.restore();
+    }
+    if (isDownload) {
+      const mmPx = pxPerMM;
+      const cutIn = Math.round(5 * mmPx), safeIn = Math.round(safeMM * mmPx);
+      const _lw = Math.max(1.5, Math.round(m * 0.0026));
+      ctx.save();
+      ctx.strokeStyle = "rgba(226,42,42,0.95)"; ctx.lineWidth = _lw; ctx.strokeRect(cutIn, cutIn, pw - cutIn * 2, ph - cutIn * 2);
+      ctx.strokeStyle = "rgba(35,110,240,0.95)"; ctx.lineWidth = _lw + 1; ctx.strokeRect(safeIn, safeIn, pw - safeIn * 2, ph - safeIn * 2);
+      const _lab = Math.max(12, Math.round(m * 0.02));
+      const _lx = 10, _ly = 10;
+      ctx.fillStyle = "rgba(255,255,255,0.86)"; ctx.fillRect(_lx - 4, _ly - 4, _lab * 11, _lab * 3.4);
+      ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.font = `bold ${_lab}px sans-serif`;
+      ctx.fillStyle = "rgba(226,42,42,0.95)"; ctx.fillText("━ 재단선 (약 5mm)", _lx, _ly);
+      ctx.fillStyle = "rgba(35,110,240,0.95)"; ctx.fillText("━ 안전선 (약 " + safeMM + "mm)", _lx, _ly + _lab * 1.5);
+      ctx.restore();
+      ctx.save();
+      ctx.translate(pw / 2, ph / 2); ctx.rotate(-Math.PI / 4);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.05)"; ctx.strokeStyle = "rgba(0, 0, 0, 0.012)"; ctx.lineWidth = 1; ctx.font = "bold 60px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      const diag = Math.sqrt(pw * pw + ph * ph);
+      for (let x = -diag; x < diag; x += 350) { for (let y = -diag; y < diag; y += 150) { ctx.fillText("nemoframe", x, y); ctx.strokeText("nemoframe", x, y); } }
+      ctx.restore();
+    }
+    return cv;
+  };
+
+  const dataB64 = (u) => (u || "").split(",")[1] || "";
+  const dataMime = (u) => { const m = (u || "").match(/^data:([^;]+);/); return m ? m[1] : "image/jpeg"; };
+  const today8 = () => { const p = (n) => String(n).padStart(2, "0"); const d = new Date(); return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`; };
+  const _jpegWithDpi = (cv, dpi) => new Promise((resolve) => {
+    cv.toBlob((blob) => {
+      blob.arrayBuffer().then((buf) => {
+        try {
+          const v = new DataView(buf);
+          if (v.getUint8(0) === 0xFF && v.getUint8(1) === 0xD8 && v.getUint8(2) === 0xFF && v.getUint8(3) === 0xE0) {
+            v.setUint8(13, 1);
+            v.setUint16(14, dpi);
+            v.setUint16(16, dpi);
+          }
+        } catch (e) {}
+        resolve(new Blob([buf], { type: "image/jpeg" }));
+      });
+    }, "image/jpeg", 0.95);
+  });
+  const _blobToBase64 = (blob) => new Promise((resolve) => {
+    const r = new FileReader(); r.onload = () => resolve(String(r.result).split(",")[1] || ""); r.readAsDataURL(blob);
+  });
+
+  const sendToDrive = async (folderName, summary, files) => {
+    const post = (payload) => fetch(APPS_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ ...payload, folderName }) });
+    if (summary) { setSendMsg("주문서 전송 중…"); await post({ kind: "summary", text: summary }); }
+    for (let i = 0; i < files.length; i++) {
+      setSendMsg(`사진 전송 중… (${i + 1}/${files.length})`);
+      await post({ kind: "file", fileName: files[i].name, mime: files[i].mime, data: files[i].data, subFolder: files[i].subFolder });
+    }
+  };
+
+  const openPreview = async () => {
+    if (!material) return showToast("액자 종류(재질)를 먼저 선택해 주세요");
+    if (!size) return showToast("액자 사이즈를 먼저 선택해 주세요");
+    if (filled < count) return showToast(`아직 ${count - filled}칸이 비어 있어요`);
+    const cv = await buildComposite(true, true);
+    setPreviewSrc(cv.toDataURL("image/jpeg", 0.9));
+  };
+
+  const submitOrder = async () => {
+    if (!material) return showToast("액자 종류(재질)를 먼저 선택해 주세요");
+    if (!size) return showToast("액자 사이즈를 먼저 선택해 주세요");
+    if (filled < count) return showToast(`아직 ${count - filled}칸이 비어 있어요`);
+    if (!form.name || !form.phone) return showToast("성함과 연락처를 입력해 주세요");
+    if (!consent) return showToast("개인정보 수집·이용 동의가 필요합니다");
+    const matLabel = `${mtl.name}-${mtl.sub}`;
+    const gapInfo = count === 1
+      ? "1컷 단품 (여백 없음)"
+      : isArtlux
+        ? "아트룩스 (여백 없음, 가장자리까지 꽉 참)"
+        : isArtview
+          ? "아트뷰 · 사진 사이 4mm 고정"
+          : isWood9
+            ? `우드 프리셋 「${WOOD_GAPS[woodGapIdx].label}」 · 바깥여백 ${(outerSideMm / 10).toFixed(1)}cm · 사진사이 ${(innerGapMm / 10).toFixed(1)}cm`
+            : `바깥여백 ${(outerMargin / 10).toFixed(1)}cm · 사진사이 ${(wInner / 10).toFixed(1)}cm`;
+    const colorName = isArtview ? (material === "artview_black" ? "검정여백" : "흰여백") : (borderColor === "#1C1B1A" ? "검정여백" : "흰여백");
+    const sizeStr = `${sz.w}x${sz.h}${sz.u}`;
+    const folderName = `${today8()}_${form.name}_${mtl.name}${mtl.sub}_${sizeStr}_${layout.cuts}컷`;
+    const finalName = `${form.name}_${matLabel}_${sizeStr}_공장발주용`;
+    const previewName = `${form.name}_${sizeStr}_미리보기`;
+    const lines = ["[주문정보]", `주문처: ${form.from}`, `주문자명: ${form.name}`, `연락처: ${form.phone}`, `받아야하는날짜: ${form.date || "미정"}`, `액자: ${mtl.name} ${mtl.sub} / ${sizeStr}`, `여백/간격: ${gapInfo} / 여백색: ${colorName}`, `구성: ${layout.cuts}컷 ${dir === "portrait" ? "세로" : "가로"}`, `보정요청: 기본 ${retouchBasicCount}장(5,000원) · 상세 ${retouchDetailCount}장(10,000원) · 합계 ${retouchTotalWon.toLocaleString()}원`, `요청사항: ${form.note || ""}`, "", "[칸별 값]"];
+    lines.push("(배율=확대배수 · panU=가로위치 · panV=세로위치, 각 -1.000~1.000 기준 · 회전=도)");
+    cells.forEach((c, i) => { if (c.src) lines.push(`${i + 1}번: 배율 ${c.scale.toFixed(2)}배 / panU ${(c.panU || 0).toFixed(3)} / panV ${(c.panV || 0).toFixed(3)} / 회전 ${c.rot}도 / 보정 ${c.retouch === "detail" ? "상세" : c.retouch === "basic" ? "기본" : "X"}`); });
+
+    const cv = await buildComposite(false, true);
+    const previewCv = await buildComposite(true, true);
+    const finalBlob = await _jpegWithDpi(cv, 300);
+    const finalB64 = await _blobToBase64(finalBlob);
+
+    const files = [
+      { name: `${finalName}.jpg`, mime: "image/jpeg", data: finalB64, subFolder: "최종본" },
+      { name: `${previewName}.jpg`, mime: "image/jpeg", data: dataB64(previewCv.toDataURL("image/jpeg", 0.85)), subFolder: "인쇄미리보기" }
+    ];
+
+    if (!APPS_SCRIPT_URL) return showToast("주문 접수 (데모 · 드라이브 미연결)");
+    try { setSendState("sending"); setSendMsg("전송 준비 중…"); await sendToDrive(folderName, lines.join("\n"), files); setSendState("done"); }
+    catch (e) { setSendState(null); showToast("전송 실패 · 잠시 후 다시 시도해 주세요"); }
+  };
+
+  const submitUpload = async () => {
+    const min = uploadKind === "album" ? 10 : 1;
+    if (uploadPhotos.length < min) return showToast(`사진을 ${min}장 이상 올려 주세요`);
+    if (!form.name || !form.phone) return showToast("성함과 연락처를 입력해 주세요");
+    if (!consent) return showToast("개인정보 수집·이용 동의가 필요합니다");
+    const kindLabel = (uploadKind === "album" ? "앨범사진" : "액자사진") + (designerFee ? "_디자이너의뢰" : "");
+    const folderName = `${today8()}_${form.name}_${kindLabel}`;
+    const summary = ["[" + kindLabel + " 업로드]", `주문처: ${form.from}`, `주문자명: ${form.name}`, `연락처: ${form.phone}`, `받아야하는날짜: ${form.date || "미정"}`, `사진수: ${uploadPhotos.length}장`, designerFee ? "디자이너 전체의뢰 · 비용 +10,000원 (밝기보정 무료·3회 수정 가능)" : "", `요청사항: ${form.note || ""}`].filter(Boolean).join("\n");
+    const files = uploadPhotos.map((u, i) => { const mime = dataMime(u); return { name: `사진_${String(i + 1).padStart(2, "0")}.${mime === "image/png" ? "png" : "jpg"}`, mime, data: dataB64(u) }; });
+    if (!APPS_SCRIPT_URL) return showToast(`사진 ${uploadPhotos.length}장 접수 (데모 · 드라이브 미연결)`);
+    try { setSendState("sending"); setSendMsg("전송 준비 중…"); await sendToDrive(folderName, summary, files); setSendState("done"); }
+    catch (e) { setSendState(null); showToast("전송 실패 · 잠시 후 다시 시도해 주세요"); }
+  };
+
+  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2800); };
+  const sel = selected != null ? cells[selected] : null;
+
+  const OrderInfo = () => (
+    <>
+      <div className="nf-card">
+        <div className="nf-h" style={{ display: "flex", alignItems: "center", gap: 6 }}><i className="ti ti-clipboard-text" style={{ color: GOLD }} aria-hidden="true" />주문 정보</div>
+        <div className="nf-row"><label className="nf-label">주문처</label><select className="nf-input" value={form.from} onChange={(e) => setForm({ ...form, from: e.target.value })}><option>네이버</option><option>자사몰</option><option>인스타그램</option><option>기타</option></select></div>
+        <div className="nf-row"><label className="nf-label">주문자 성함 (결제자명과 동일하게)</label><input className="nf-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="홍길동" /></div>
+        <div className="nf-row"><label className="nf-label">연락처</label><input className="nf-input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder=" " /></div>
+        <div><label className="nf-label">주문 요청사항</label><textarea className="nf-input nf-req" rows={3} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="주문 요청사항을 적어주세요. 보정이 필요한 경우 상세히 알려주세요. ex) 1번 6번 사진 인물보정 필요." /></div>
+      </div>
+      <div className="nf-card">
+        <button className="nf-consent" onClick={() => setConsent(!consent)}><span className={`nf-box ${consent ? "on" : ""}`}>{consent && <Ic name="check" size={12} color="#fff" />}</span><span style={{ fontSize: 13 }}>[필수] 개인정보 수집·이용 동의</span></button>
+        <button className="nf-textbtn" onClick={() => setConsentOpen(!consentOpen)}>{consentOpen ? <Ic name="chevronup" size={13} /> : <Ic name="chevrondown" size={13} />} 내용 {consentOpen ? "접기" : "보기"}</button>
+        {consentOpen && (<div style={{ fontSize: 12, color: SUBTLE, lineHeight: 1.7, marginTop: 8, borderTop: `1px solid ${LINE}`, paddingTop: 8 }}>· 수집 항목: 고객 제공 사진, 성함, 연락처, 예식일 · 이용 목적: 주문 제작·상담 및 배송 · 보유 기간: 업로드 이후 30일까지 보관하며, 필요 시 관련 법령에 의거하여 목적 달성 시까지 보관 후 파기합니다. 동의를 거부하실 수 있으나, 거부 시 주문 제작이 어렵습니다.</div>)}
+      </div>
+    </>
+  );
+  const Footer = () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+      <div style={{ display: "flex", gap: 8 }}>
+        <a className="nf-btn ghost" href={KAKAO_URL} target="_blank" rel="noreferrer" style={{ textDecoration: "none", gap: 6 }}><i className="ti ti-message-circle" aria-hidden="true" />카카오톡 상담</a>
+        <a className="nf-btn ghost" href={INSTA_URL} target="_blank" rel="noreferrer" style={{ textDecoration: "none", gap: 6 }}><i className="ti ti-brand-instagram" aria-hidden="true" />인스타그램</a>
+      </div>
+      {location.pathname.includes("/mobile/") && <a className="nf-textbtn" style={{ justifyContent: "center", margin: "6px auto 0" }} href="../index.html?pc=1"><i className="ti ti-device-desktop" style={{ fontSize: 13 }} aria-hidden="true" />PC 버전으로 보기</a>}
+    </div>
+  );
+  const ProdTime = () => (
+    <>
+      <div className="nf-prodtime">
+        <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1 }}>[ 주의 사항 ]</div>
+        <div style={{ fontSize: 16, fontWeight: 700, margin: "4px 0 12px" }}>
+          인쇄물(앨범, 액자)의 밝기는<br /><span style={{ color: RED }}>모니터보다 어두워집니다.</span>
+        </div>
+        <div style={{ fontSize: 12, color: SUBTLE, lineHeight: 1.9, borderLeft: `3px solid ${LINE}`, paddingLeft: 12, textAlign: "left" }}>
+          모니터와의 밝기 차이는 <b style={{ color: INK }}>약 20~30%</b>입니다. 어두운 색감의 사진은 <b style={{ color: INK }}>아트뷰/아트룩스</b> 액자를 추천드립니다. 우드 무광 액자는 무광 코팅이 들어가 <b style={{ color: RED }}>약 30%가량 어두워집니다.</b> <b><u>어두운 색감의 경우 <b style={{ color: INK }}>보정 옵션(+5,000원)</b>을 추가해 주세요.</u></b>
+        </div>
+      </div>
+      <div className="nf-prodtime">
+        <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1 }}>[ 제작 기간 ]</div>
+        <div style={{ fontSize: 16, fontWeight: 700, margin: "4px 0 12px" }}>영업일 기준 <span style={{ color: RED }}>약 8일~10일</span> 소요</div>
+        <div style={{ fontSize: 12, color: SUBTLE, lineHeight: 1.9, borderLeft: `3px solid ${LINE}`, paddingLeft: 12, textAlign: "left" }}>
+          예식일이 얼마 남지 않았다면 <b style={{ color: INK }}>급작업 요청도 가능</b>하니, 플친으로 연락 주세요! 급작업 시 3~5일 이내 수령 가능하며, <b style={{ color: INK }}>공장-네모 간 퀵 비용 + 택배 2회 포함 총 비용 5만원 발생</b>합니다.
+        </div>
+      </div>
+    </>
+  );
+
+  return (
+    <div className="nf-root" style={{ background: PAPER, color: INK, minHeight: "100%" }}>
+      <style>{`
+        .nf-root{font-family:'Pretendard Variable','Pretendard',-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word;}
+        .nf-wrap{max-width:520px;margin:0 auto;padding:20px 16px 56px;box-sizing:border-box;}
+        .nf-serif{font-family:'Gowun Batang',Georgia,serif;}
+        .nf-logo{font-family:'Poor Story',cursive;}
+        .nf-logo-wrap{position:relative;display:inline-block;}
+        .nf-logo-deco{position:absolute;color:${GOLD};pointer-events:none;line-height:1;}
+        .nf-cell{position:relative;overflow:hidden;background:${CARD};cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;}
+        .nf-cell.hscroll{touch-action:pan-x;}
+        /* 칸을 꾹 눌러 옮기는 동안에는 페이지가 따라 스크롤되지 않게 (스크롤이 시작되면 드래그가 취소돼서 순서가 저장되지 않음) */
+        body.nf-dragging{touch-action:none;overscroll-behavior:none;}
+        body.nf-dragging .nf-cell{touch-action:none;}
+        .nf-cell img{-webkit-user-drag:none;user-select:none;}
+        .nf-cell.on{outline:2px solid ${GOLD};outline-offset:-1px;overflow:visible;z-index:5;}
+        .nf-cell.has{cursor:grab;}
+        .nf-cell.hover{outline:3px dashed ${GOLD};outline-offset:-2px;}
+        .nf-cell.locked{outline:3px solid ${GOLD};outline-offset:-1.5px;overflow:visible;z-index:600;touch-action:none !important;box-shadow:0 8px 28px rgba(0,0,0,0.35);}
+        .nf-lock-overlay{position:fixed;inset:0;background:rgba(20,18,16,0.62);z-index:500;-webkit-tap-highlight-color:transparent;touch-action:none;}
+        .nf-lock-hint{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);z-index:601;background:rgba(28,28,30,0.88);color:#fff;font-size:12px;padding:9px 16px;border-radius:999px;pointer-events:none;white-space:nowrap;}
+        .nf-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:100%;color:${SUBTLE};font-size:11px;}
+        .nf-num{position:absolute;top:5px;left:6px;font-size:10px;color:rgba(255,255,255,0.75);background:rgba(0,0,0,0.55);border-radius:5px;padding:1px 5px;pointer-events:none;z-index:2;}
+        .nf-celldel{position:absolute;bottom:4px;right:4px;width:30px;height:30px;border-radius:50%;background:rgba(255,69,58,0.92);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:4;}
+        .nf-cellret{position:absolute;bottom:4px;left:4px;height:28px;padding:0 10px;border-radius:999px;font-size:11px;font-weight:700;cursor:pointer;z-index:4;display:inline-flex;align-items:center;font-family:inherit;}
+        .nf-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid ${LINE};background:${CARD};color:${INK};border-radius:12px;padding:14px;font-size:14.5px;cursor:pointer;transition:all .15s;width:100%;box-sizing:border-box;font-family:inherit;}
+        .nf-btn.dark{background:${INK};color:#fff;border-color:${INK};font-weight:600;border-radius:980px;}
+        .nf-btn.ghost{background:transparent;}.nf-btn:disabled{opacity:.4;cursor:not-allowed;}
+        .nf-btn.emph{position:relative;border:1px solid ${GOLD};color:${GOLD};font-weight:700;background:${TINT};}
+        .nf-btn.ai{background:linear-gradient(120deg,#7C4DFF,#C13ADD 45%,#2E6BFF);background-size:220% 220%;color:#fff;border:none;font-weight:800;}
+        .rotbtn{position:relative;display:inline-flex;align-items:center;gap:5px;background:${BADGE_NEUTRAL};color:${INK};border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;}
+        .nf-icobtn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid ${LINE};background:${CARD};color:${INK};border-radius:10px;padding:11px;font-size:12.5px;cursor:pointer;font-family:inherit;}
+        .nf-icobtn.on{background:${GOLD};color:#fff;border-color:${GOLD};font-weight:600;}
+        .nf-chip{border:1px solid ${LINE};background:${CARD};border-radius:999px;padding:9px 6px;font-size:12px;color:${INK};cursor:pointer;font-family:inherit;text-align:center;}
+        .nf-chip.on{background:${GOLD};color:#fff;border-color:${GOLD};font-weight:600;}
+        .nf-input,.nf-input option{width:100%;border:1px solid ${LINE};border-radius:10px;padding:11px 12px;font-size:16px;background:${CARD};color:${INK};box-sizing:border-box;outline:none;font-family:inherit;}
+        .nf-input:focus{border-color:${GOLD};}
+        .nf-req::placeholder{color:rgba(142,142,147,0.6);}
+        .nf-label{font-size:12px;color:${SUBTLE};margin-bottom:4px;display:block;}
+        .nf-row{margin-bottom:10px;}
+        .nf-h{font-size:14.5px;font-weight:700;color:${INK};margin-bottom:10px;}
+        .nf-card{border:0.5px solid ${LINE};border-radius:14px;background:${CARD};padding:14px;box-sizing:border-box;}
+        .nf-range{width:100%;accent-color:${GOLD};height:30px;touch-action:none;}
+        .nf-toggle{display:inline-flex;border:1px solid ${LINE};border-radius:999px;overflow:hidden;background:${CARD};width:100%;}
+        .nf-toggle button{flex:1;border:none;background:none;padding:13px 10px;font-size:15px;font-weight:700;color:${SUBTLE};cursor:pointer;font-family:inherit;}
+        .nf-toggle button.on{background:${GOLD};color:#fff;}
+        .nf-back{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:${SUBTLE};background:none;border:none;cursor:pointer;padding:0;font-family:inherit;}
+        .nf-consent{display:flex;align-items:center;gap:10px;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;color:${INK};}
+        .nf-box{width:22px;height:22px;border-radius:6px;border:1.5px solid ${LINE};display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+        .nf-box.on{background:${GOLD};border-color:${GOLD};}
+        .nf-textbtn{display:inline-flex;align-items:center;gap:4px;background:none;border:none;color:${SUBTLE};font-size:12px;cursor:pointer;margin-top:8px;padding:0;font-family:inherit;}
+        .nf-thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+        .nf-thumb{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:${CARD};}
+        .nf-thx{position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,0.55);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+        .nf-addtile{aspect-ratio:1;border:1px dashed ${LINE};border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:${SUBTLE};font-size:11px;cursor:pointer;background:${CARD};}
+        .nf-ghost{position:fixed;width:70px;height:70px;border-radius:10px;overflow:hidden;pointer-events:none;z-index:90;box-shadow:0 10px 30px rgba(0,0,0,0.35);transform:translate(-50%,-50%) rotate(-4deg);border:2px solid ${INK};}
+        .nf-cdot{width:32px;height:32px;border-radius:9px;cursor:pointer;}
+        .nf-prodtime{border:0.5px solid ${LINE};border-radius:14px;background:${CARD};padding:18px 16px;text-align:center;margin-top:14px;}
+        .nf-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:18px;}
+        .nf-modal{background:${CARD};border-radius:18px;max-width:380px;width:100%;padding:24px 20px;box-shadow:0 20px 60px rgba(0,0,0,0.25);}
+        .nf-toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:${INK};color:#fff;padding:12px 20px;border-radius:999px;font-size:13px;z-index:80;max-width:90%;text-align:center;}
+        .hide-scroll{-ms-overflow-style:none;scrollbar-width:none;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;touch-action:pan-x;}
+        .hide-scroll::-webkit-scrollbar{display:none;}
+        .nf-list{background:${CARD};border-radius:14px;overflow:hidden;margin-bottom:16px;}
+        .nf-choice{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;background:transparent;border:none;padding:14px 16px;font-family:inherit;cursor:pointer;box-sizing:border-box;}
+        .nf-choice:active{background:#EDEDF0;}
+        .nf-choice:disabled{opacity:.5;}
+        .nf-choice + .nf-choice{border-top:0.5px solid ${LINE};}
+        .nf-choice-main{display:flex;align-items:center;gap:12px;}
+        .nf-choice-badge{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:17px;}
+        .nf-choice-title{font-size:15px;font-weight:500;color:${INK};}
+        .nf-choice-sub{font-size:11.5px;color:${MUTED};margin-top:2px;}
+        .nf-choice-tag{font-size:10.5px;color:${GOLD};font-weight:700;white-space:nowrap;background:${TINT};padding:3px 8px;border-radius:999px;}
+        .nf-colorgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+        .nf-colorcard{display:flex;flex-direction:column;align-items:center;gap:8px;border:0.5px solid ${LINE};border-radius:14px;background:${CARD};padding:14px 6px;font-family:inherit;font-size:12.5px;color:${INK};cursor:pointer;}
+        .nf-colorcard:active{background:#EDEDF0;}
+        .nf-colorsw{width:32px;height:32px;border-radius:9px;border:1px solid rgba(0,0,0,0.12);}
+        .nf-layoutcard{display:flex;align-items:center;width:100%;background:${CARD};border:0.5px solid ${LINE};border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;font-family:inherit;box-sizing:border-box;}
+        .nf-layoutcard:active{background:#EDEDF0;}
+      `}</style>
+
+      <input ref={fileRef} type="file" accept="image/*" multiple onChange={onFiles} style={{ display: "none" }} />
+      <input ref={uploadRef} type="file" accept="image/*" multiple onChange={onUploadFiles} style={{ display: "none" }} />
+
+      <div className="nf-wrap">
+        <div style={{ textAlign: "center", marginBottom: 6 }}>
+          <img src="../nemo_logo(no).png" alt="네모프레임" style={{ width: 150, maxWidth: "55%", height: "auto", display: "block", margin: "0 auto" }} />
+          <div style={{ fontSize: 12.5, color: SUBTLE, marginTop: 2 }}>액자 · 앨범 사진 주문 (모바일)</div>
+        </div>
+        <div style={{ height: 1, background: LINE, margin: "14px 0 22px" }} />
+
+        {screen === "intro" && (
+          <div>
+            <div style={{ border: `1px solid ${RED}`, borderRadius: 12, background: DANGER_TINT, padding: "10px 12px", textAlign: "center", marginBottom: 18, display: "flex", flexDirection: "column", gap: 3 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12, fontWeight: 700, color: RED }}><i className="ti ti-alert-triangle" style={{ fontSize: 15 }} aria-hidden="true" />이 페이지는 주문 페이지가 아닙니다</div>
+              <div style={{ fontSize: 10.5, color: INK, lineHeight: 1.4 }}>스마트스토어 또는 자사몰에서 이미 주문하신 건에 대한<br />사진 파일을 업로드하는 전용 공간입니다.</div>
+            </div>
+            <StepHeader title="무엇을 디자인해 드릴까요?" sub="아래에서 하나를 선택해주세요." />
+            <div className="nf-list">
+              <ChoiceRow icon="frame" badgeBg={GOLD} badgeColor="#fff" title="액자 디자인" sub="아트뷰 · 우드 · 아크릴 · 미니세트 등" onClick={() => goScreen("product")} />
+              <ChoiceRow icon="book" badgeColor={MUTED} title="앨범 디자인" sub="웨딩앨범 · 포토북" tag="공사중" onClick={openAlbum} />
+            </div>
+            <div style={{ marginTop: 22 }}>{Footer()}</div>
+          </div>
+        )}
+
+        {screen === "albumSoon" && (
+          <div style={{ textAlign: "center", padding: "36px 6px" }}>
+            <div style={{ width: 56, height: 56, borderRadius: 16, background: BADGE_NEUTRAL, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}><i className="ti ti-movie" style={{ fontSize: 26, color: MUTED }} aria-hidden="true" /></div>
+            <div style={{ fontSize: 16.5, fontWeight: 800, color: INK, marginBottom: 8 }}>앨범 디자인은 공사중입니다</div>
+            <div style={{ fontSize: 13, color: SUBTLE, lineHeight: 1.7, marginBottom: 24 }}>곧 오픈될 예정이에요.<br />급하게 필요하시면 카카오톡으로 문의해주세요!</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <button className="nf-btn dark" onClick={goIntro}>처음으로</button>
+              {Footer()}
+            </div>
+          </div>
+        )}
+
+        {screen === "product" && (
+          <div>
+            <StepHeader step={1} total={3} title="어떤 액자로 디자인할까요?" sub="이미 구매하신 상품을 선택해주세요." onBack={goIntro} />
+            <div className="nf-list">
+              <ChoiceRow icon="frame" badgeBg={GOLD} badgeColor="#fff" title="아트뷰" sub="철제 테두리 액자" onClick={() => { setMaterialFamily("artview"); goScreen("colorPick"); }} />
+              <ChoiceRow icon="tree" badgeBg={GOLD} badgeColor="#fff" title="우드" sub="원목 액자" onClick={() => { setMaterial("wood_walnut"); setMaterialFamily(""); goScreen("layout"); }} />
+              <ChoiceRow icon="square" badgeBg={GOLD} badgeColor="#fff" title="아크릴액자" sub="테두리 없음 (아트룩스)" onClick={() => { setMaterial("artlux"); setMaterialFamily(""); goScreen("layout"); }} />
+            </div>
+            <div className="nf-list">
+              <ChoiceRow icon="gift" badgeBg={GOLD} badgeColor="#fff" title="미니액자 세트" sub="3p · 5p (크기별 구성)" onClick={() => goScreen("setPicker")} />
+            </div>
+            <div onClick={() => { setDesignerFee(true); openUpload("frame"); }} style={{ background: TINT, borderRadius: 14, padding: "16px 18px", textAlign: "center", cursor: "pointer" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, fontSize: 15, fontWeight: 700, color: INK }}><i className="ti ti-palette" style={{ color: GOLD, fontSize: 18 }} aria-hidden="true" />디자이너에게 모두 맡기기</div>
+              <div style={{ fontSize: 12.5, color: SUBTLE, marginTop: 6 }}>비용 <b style={{ color: INK }}>+10,000원</b> · 밝기보정 무료 · 3회 수정 가능</div>
+              <div style={{ fontSize: 12, color: INK, marginTop: 6, fontWeight: 700 }}>후기작성 or 포트폴리오 이용 동의시 <span style={{ color: GOLD }}>무료작업</span></div>
+            </div>
+          </div>
+        )}
+
+        {screen === "colorPick" && (
+          <div>
+            <StepHeader step={1} total={3} title="아트뷰 색상을 선택해주세요" sub="구매하신 색상과 동일하게 선택해주세요." onBack={() => goScreen("product")} />
+            <div className="nf-colorgrid">
+              {[{ key: "artview_silver", label: "실버", sw: "linear-gradient(135deg,#f2f2f4,#c6c9cf 55%,#9aa0a8)" }, { key: "artview_black", label: "블랙", sw: "#141414" }].map((c) => (
+                <button key={c.key} className="nf-colorcard" onClick={() => { setMaterial(c.key); goScreen("layout"); }}>
+                  <span className="nf-colorsw" style={{ background: c.sw }} />
+                  <span>{c.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {screen === "layout" && (
+          <div>
+            <StepHeader step={2} total={3} title="레이아웃을 선택해주세요" sub="사진을 몇 칸으로 나눠서 넣을까요?" onBack={() => goScreen(materialFamily ? "colorPick" : "product")} />
+            <div className="nf-toggle" style={{ marginBottom: 18 }}>
+              <button className={dir === "portrait" ? "on" : ""} onClick={() => setDir("portrait")}>세로형</button>
+              <button className={dir === "landscape" ? "on" : ""} onClick={() => setDir("landscape")}>가로형</button>
+            </div>
+            {[1, 3, 9].map((cuts) => {
+              const cols = cuts === 9 ? 3 : cuts === 3 ? (dir === "portrait" ? 1 : 3) : 1;
+              const rows = cuts === 9 ? 3 : cuts === 3 ? (dir === "portrait" ? 3 : 1) : 1;
+              return (
+                <button key={cuts} className="nf-layoutcard" onClick={() => chooseFrame(cuts)}>
+                  <MiniFrame cols={cols} rows={rows} dir={dir} />
+                  <div style={{ marginLeft: 16, textAlign: "left" }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: INK }}>{cuts === 1 ? "단일사진액자" : `${cuts}분할액자`}</div>
+                    <div style={{ fontSize: 11.5, color: SUBTLE, marginTop: 2 }}>{cuts === 1 ? "사진 1장 · 미니~대형액자" : `${cuts}컷 · ${dir === "portrait" ? "세로형" : "가로형"}`}</div>
+                  </div>
+                </button>
+              );
+            })}
+            <div className="nf-list">
+              <ChoiceRow icon="palette" badgeColor={MUTED} title="그 외 디자인" sub="디자이너에게 의뢰" tag="+10,000원" onClick={() => { setDesignerFee(true); openUpload("frame"); }} />
+            </div>
+          </div>
+        )}
+
+        {screen === "sizePick" && (
+          <div>
+            <StepHeader step={3} total={3} title="사이즈를 선택해주세요" sub="스토어에서 주문하신 사이즈를 골라주세요 (미리보기용입니다)." onBack={() => goScreen("layout")} />
+            <div className="nf-list">
+              {sizeOptions.map((s) => (
+                <ChoiceRow key={sizeId(s)} title={sizeLabel(s)} onClick={() => { setSize(sizeId(s)); setShowPopup(true); goScreen("build"); }} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {screen === "build" && (
+          <div ref={boardWrapRef}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <button className="nf-back" onClick={() => { setLockedIdx(null); goScreen("sizePick"); }}><Ic name="chevronleft" size={15} /> 이전</button>
+              <div style={{ fontSize: 12, fontWeight: 600, color: SUBTLE }}>{layout.cuts}컷 · {dir === "portrait" ? "세로형" : "가로형"} · {sz.w}×{sz.h}{sz.u}</div>
+            </div>
+            <button className="nf-textbtn" onClick={() => { setLockedIdx(null); goIntro(); }} style={{ marginBottom: 14 }}>처음부터 다시하기</button>
+
+            <div style={{ background: TINT, borderRadius: 12, padding: "13px 14px", marginBottom: 14, textAlign: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 14, fontWeight: 700, color: INK }}><i className="ti ti-photo-plus" style={{ color: GOLD, fontSize: 16 }} aria-hidden="true" />한꺼번에 선택하시면 편해요</div>
+              <div style={{ fontSize: 11.5, color: SUBTLE, marginTop: 4, lineHeight: 1.5 }}>첫 칸을 누르고 <b style={{ color: INK }}>필요한 사진을 한번에 모두 선택</b>하면<br />순서대로 자동 배치돼요.</div>
+            </div>
+
+            <div ref={warnRef} style={{ border: `1px solid ${RED}`, borderRadius: 12, background: DANGER_TINT, padding: "10px 12px", textAlign: "center", marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12, fontWeight: 700, color: RED }}><i className="ti ti-alert-triangle" style={{ fontSize: 15 }} aria-hidden="true" />이 페이지는 주문 페이지가 아닙니다</div>
+              <div style={{ fontSize: 10.5, color: INK, marginTop: 3, lineHeight: 1.4 }}>스마트스토어/자사몰에서 이미 주문하신 건의 사진을 올리는 공간입니다.</div>
+              <div style={{ fontSize: 10.5, color: INK, marginTop: 3, lineHeight: 1.4 }}>분할액자에서 각 사진의 여백은 약간의 오차가 있을 수 있습니다. 최종본 컨펌으로 확인하실 수 있습니다.</div>
+            </div>
+
+            <div style={{ position: "relative", marginBottom: 18 }}>
+              <div ref={frameRef} style={{ aspectRatio: ratioStr, background: "#E9E7E3", padding: gridMetrics.mountPad ? `${Math.round(gridMetrics.mountPad)}px` : "2px", borderRadius: 3 }}>
+                <div style={{ width: "100%", height: "100%", background: gapColor, boxSizing: "border-box", padding: gridSize.w ? `${Math.round(gridMetrics.outerTopPx)}px ${Math.round(gridMetrics.outerSidePx)}px ${Math.round(gridMetrics.outerBottomPx)}px` : "0px", display: "grid", gridTemplateColumns: gridSize.w ? gridMetrics.colWidths.map((w) => `${w}px`).join(" ") : `repeat(${layout.cols},1fr)`, gridTemplateRows: gridSize.w ? gridMetrics.rowHeights.map((h) => `${h}px`).join(" ") : `repeat(${layout.rows},1fr)`, gap: gridSize.w ? `${Math.round(gridMetrics.gapPxGrid)}px` : "0px" }}>
+                  {cells.map((c, i) => {
+                    const col = i % layout.cols, row = Math.floor(i / layout.cols);
+                    const cwR = (gridSize.w && gridMetrics.colWidths[col]) || cellSize.w;
+                    const chR = (gridSize.w && gridMetrics.rowHeights[row]) || cellSize.h;
+                    const pl = c.src ? place(cwR, chR, c.natW, c.natH, c) : null;
+                    return (
+                      <div key={i} data-cellidx={i} ref={i === 0 ? firstCellRef : null}
+                        className={`nf-cell ${selected === i ? "on" : ""} ${lockedIdx === i ? "locked" : ""} ${c.src ? "has" : ""} ${hoverCell === i && moving ? "hover" : ""}`}
+                        onClick={() => (c.src ? toggleLock(i) : openPicker(i))} onPointerDown={(e) => onPointerDown(e, i)} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerLeave={onPointerUp}>
+                        {c.src ? (<>
+                          {selected === i && pl && <img src={c.src} alt="" draggable={false} style={{ position: "absolute", width: pl.Rw, height: pl.Rh, left: pl.left, top: pl.top, maxWidth: "none", transform: `rotate(${c.rot || 0}deg)`, transformOrigin: "center center", pointerEvents: "none", opacity: 0.32 }} />}
+                          <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+                            <img src={c.src} alt="" draggable={false} onLoad={(e) => { const w = e.target.naturalWidth, h = e.target.naturalHeight; if (c.natW !== w || c.natH !== h) updateCell(i, { natW: w, natH: h }); }}
+                              style={pl ? { position: "absolute", width: pl.Rw, height: pl.Rh, left: pl.left, top: pl.top, maxWidth: "none", transform: `rotate(${c.rot || 0}deg)`, transformOrigin: "center center", pointerEvents: "none" } : { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
+                          </div>
+                          {count > 1 && <span className="nf-num">{i + 1}</span>}
+                          <button className="nf-cellret" onClick={(e) => { e.stopPropagation(); const next = c.retouch === "detail" ? null : c.retouch === "basic" ? "detail" : "basic"; updateCell(i, { retouch: next }); }} onPointerDown={(e) => e.stopPropagation()} style={c.retouch === "detail" ? { background: "#6B3FA0", color: "#fff" } : c.retouch === "basic" ? { background: RED, color: "#fff" } : { background: "rgba(255,255,255,0.92)", color: INK, border: "1px solid " + LINE }}>{c.retouch === "detail" ? "✓ 상세보정" : c.retouch === "basic" ? "✓ 기본보정" : "보정요청"}</button>
+                          <button className="nf-celldel" onClick={(e) => { e.stopPropagation(); removeCell(i); }} onPointerDown={(e) => e.stopPropagation()}><Ic name="x" size={13} /></button>
+                        </>) : (<div className="nf-add"><Ic name="plus" size={18} strokeWidth={1.5} /><span>{count > 1 ? `${i + 1}번 칸` : "사진 추가"}</span>{count > 1 && i === 0 && <span style={{ fontSize: 9.5, color: SUBTLE, marginTop: 2, lineHeight: 1.3, padding: "0 6px", textAlign: "center" }}>여러 장 선택 시<br />순서대로 배치</span>}</div>)}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              {count > 1 && <button className="nf-btn ai" disabled={filled < 2} onClick={aiArrange} style={{ position: "absolute", right: 6, bottom: -18, width: "auto", padding: "10px 16px", fontSize: 12.5 }}><Ic name="sparkles" size={14} /> AI배치</button>}
+            </div>
+
+            <div style={{ textAlign: "center", fontSize: 12.5, color: SUBTLE, marginBottom: 4 }}>채운 칸 <b style={{ color: GOLD, fontSize: 15 }}>{filled}</b> / {count} · 사진 1칸 <b style={{ color: INK }}>{size ? `${cellWcm.toFixed(1)}×${cellHcm.toFixed(1)}cm` : "-"}</b></div>
+            {count > 1 && filled > 1 && <div style={{ textAlign: "center", fontSize: 11, color: SUBTLE, marginBottom: 16 }}>사진을 꾹 눌러서 다른 칸으로 옮길 수 있어요</div>}
+
+            <div className="nf-card" style={{ marginBottom: 14 }}>
+              <div className="nf-h" style={{ display: "flex", alignItems: "center", gap: 6 }}><i className="ti ti-crop" style={{ color: GOLD }} aria-hidden="true" />여백 설정</div>
+              {count === 1 ? (
+                <div style={{ fontSize: 12, color: SUBTLE, lineHeight: 1.6 }}>1컷 단품은 여백 설정이 없어요. 사진이 꽉 차게 제작됩니다.</div>
+              ) : isArtlux ? (
+                <div style={{ fontSize: 12, color: SUBTLE, lineHeight: 1.6 }}>아트룩스는 여백 설정이 불가합니다. 사진이 가장자리까지 꽉 차게 인쇄돼요.</div>
+              ) : isArtview ? (
+                <>
+                  <div style={{ fontSize: 12, color: SUBTLE, lineHeight: 1.6 }}>사진 사이 <b style={{ color: INK }}>4mm 간격</b>으로 고정 제작돼요. <span style={{ color: MUTED }}>(간격색 = 테두리색)</span></div>
+                  <img src="example/at3.jpg" alt="아트뷰 제작 예시" style={{ width: "100%", borderRadius: 8, marginTop: 10, display: "block" }} />
+                </>
+              ) : isWood9 ? (
+                <>
+                  <div style={{ fontSize: 11.5, color: SUBTLE, marginBottom: 8 }}>우드 액자는 제작 가능한 간격 중에서 선택해주세요.</div>
+                  <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+                    {WOOD_GAPS.map((g, gi) => gi === 0 ? null : (
+                      <button key={gi} className={`nf-chip ${woodGapIdx === gi ? "on" : ""}`} onClick={() => setWoodGapIdx(gi)} style={{ flex: 1 }}>{g.label}</button>
+                    ))}
+                  </div>
+                  <div style={{ fontSize: 11.5, color: SUBTLE, marginBottom: 10 }}>바깥 여백 {(wOuterSide / 10).toFixed(1)}cm · 사진 사이 {(wInner / 10).toFixed(1)}cm</div>
+                  <img src={`example/w${woodGapIdx}.jpg`} alt={`우드 ${WOOD_GAPS[woodGapIdx].label} 제작 예시`} style={{ width: "100%", borderRadius: 8, display: "block" }} />
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: 11.5, color: SUBTLE, marginBottom: 6 }}>여백 (좌우 · 0~100mm)</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+                    <input className="nf-range" type="range" min="0" max="100" step="1" value={outerMargin} onChange={(e) => setOuterMargin(parseFloat(e.target.value))} />
+                    <span style={{ fontSize: 12.5, color: INK, width: 46, textAlign: "right", flexShrink: 0 }}>{outerMargin}mm</span>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <span style={{ fontSize: 11, color: SUBTLE }}>여백색</span>
+                    {BORDER_COLORS.map((c) => (<div key={c} className="nf-cdot" onClick={() => setBorderColor(c)} style={{ background: c, border: borderColor === c ? "2px solid " + GOLD : "1px solid rgba(255,255,255,0.25)" }} />))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="nf-card" style={{ marginBottom: 14, background: TINT }}>
+              <div style={{ fontSize: 11.5, color: INK, lineHeight: 1.85 }}>
+                본 창에서 결제는 불가합니다.<br />
+                보정요청은 추후 취소하실 수 있습니다.<br />
+                <b>상세보정</b> : 몸매, 얼굴크기, AI보정, 웨딩보정<br />
+                <b>기본보정</b> : 밝기, 인물 간단보정
+              </div>
+            </div>
+
+            {retouchCount > 0 && (<div className="nf-card" style={{ padding: "10px 12px", display: "flex", alignItems: "center", gap: 8, background: DANGER_TINT, borderColor: "rgba(255,69,58,0.3)", marginBottom: 14 }}><Ic name="sparkles" size={14} color={RED} /><div style={{ fontSize: 11.5 }}>
+              {retouchBasicCount > 0 && <>기본보정 <b>{retouchBasicCount}장</b></>}{retouchBasicCount > 0 && retouchDetailCount > 0 && " · "}{retouchDetailCount > 0 && <>상세보정 <b>{retouchDetailCount}장</b></>} · 합계 <b>{retouchTotalWon.toLocaleString()}원</b>
+            </div></div>)}
+
+            <div className="nf-card" style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
+              <button className="nf-btn ghost" style={{ color: SUBTLE }} onClick={resetAll}><Ic name="rotateccw" size={14} /> 전체 초기화</button>
+              <button className="nf-btn" onClick={() => setOrderInfoOpen(true)}><Ic name="check" size={14} /> 주문정보 확인 / 수정</button>
+              <button className="nf-btn ghost emph" onClick={openPreview}><Ic name="zoomin" size={14} /> 미리보기</button>
+              <button className="nf-btn dark" onClick={() => { if (!form.name || !form.phone) return showToast("성함과 연락처를 입력해 주세요"); if (!consent) return showToast("개인정보 수집·이용 동의가 필요합니다"); setOrderConfirm(true); }} disabled={filled < count || !consent}><Ic name="check" size={15} /> 파일 업로드하기</button>
+              {Footer()}
+            </div>
+
+            {ProdTime()}
+          </div>
+        )}
+
+        {screen === "designer" && (
+          <div>
+            <button className="nf-back" style={{ marginBottom: 14 }} onClick={goIntro}><Ic name="chevronleft" size={15} /> 처음으로</button>
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 17, fontWeight: 700 }}>{uploadKind === "album" ? "앨범사진 업로드" : "액자사진 업로드"}</div>
+              <div style={{ fontSize: 12.5, color: SUBTLE, marginTop: 3 }}>{uploadKind === "album" ? "사진 10~100장 · 웨딩앨범/포토북" : "사진 1~10장 · 디자이너 작업의뢰"}</div>
+            </div>
+            {designerFee && (
+              <div style={{ background: TINT, borderRadius: 14, padding: "14px 16px", marginBottom: 14, textAlign: "center" }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: INK }}>비용 <b>+10,000원</b> · 밝기보정 무료 · 3회 수정 가능</div>
+                <div style={{ fontSize: 11.5, color: INK, marginTop: 6, fontWeight: 700 }}>후기작성 or 포트폴리오 이용 동의시 <span style={{ color: GOLD }}>무료작업</span></div>
+              </div>
+            )}
+            <div className="nf-card" style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}><div className="nf-h" style={{ margin: 0 }}>사진 업로드</div><div style={{ fontSize: 12, color: SUBTLE }}>{uploadPhotos.length} / {uploadKind === "album" ? 100 : 10}</div></div>
+              <div className="nf-thumbs">
+                {uploadPhotos.map((src, i) => (<div className="nf-thumb" key={i}><img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /><button className="nf-thx" onClick={() => setUploadPhotos((p) => p.filter((_, j) => j !== i))}><Ic name="x" size={13} /></button></div>))}
+                {uploadPhotos.length < (uploadKind === "album" ? 100 : 10) && (<div className="nf-addtile" onClick={() => { if (uploadRef.current) { uploadRef.current.value = ""; uploadRef.current.click(); } }}><Ic name="plus" size={18} strokeWidth={1.5} /><span>사진 추가</span></div>)}
+              </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <button className="nf-btn" onClick={() => setOrderInfoOpen(true)}><Ic name="check" size={14} /> 주문정보 확인 / 수정</button>
+              <button className="nf-btn dark" onClick={submitUpload}><Ic name="check" size={15} /> 주문하기</button>
+              {ProdTime()}
+              {Footer()}
+            </div>
+          </div>
+        )}
+
+        {screen === "setPicker" && (
+          <div>
+            <StepHeader title="미니액자 세트" sub="원하시는 구성을 선택해주세요." onBack={() => goScreen("product")} />
+            <div className="nf-list">
+              {Object.keys(MINI_SETS).map((k) => (
+                <ChoiceRow key={k} icon="photo" badgeBg={GOLD} badgeColor="#fff" title={MINI_SETS[k].label} sub={MINI_SETS[k].desc} onClick={() => chooseSet(k)} />
+              ))}
+            </div>
+            <div style={{ fontSize: 11.5, color: SUBTLE, textAlign: "center", marginTop: 10, lineHeight: 1.6 }}>6p 구성은 별도 상품이 아니라, <b style={{ color: INK }}>대형액자(단일사진액자) 주문을 완료</b>하신 뒤<br />이어서 5p 미니세트를 담으시면 완성돼요.</div>
+          </div>
+        )}
+
+        {screen === "setBuild" && (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+              <button className="nf-back" onClick={() => goScreen("setPicker")}><Ic name="chevronleft" size={15} /> 이전</button>
+              <div style={{ fontSize: 12, fontWeight: 600, color: SUBTLE }}>{setKind && MINI_SETS[setKind].label}</div>
+            </div>
+            <button className="nf-textbtn" onClick={goIntro} style={{ marginBottom: 14 }}>처음부터 다시하기</button>
+
+            <div className="nf-card" style={{ marginBottom: 14 }}>
+              <div className="nf-h" style={{ margin: 0, display: "flex", alignItems: "center", gap: 6 }}><i className="ti ti-frame" style={{ color: GOLD }} aria-hidden="true" />{setKind && MINI_SETS[setKind].label}</div>
+              <div style={{ fontSize: 12, color: SUBTLE, marginTop: 4 }}>{setKind && MINI_SETS[setKind].desc}</div>
+              <div style={{ fontSize: 12.5, color: INK, marginTop: 8 }}>채운 칸 <b style={{ color: GOLD }}>{filled}</b> / {count}</div>
+            </div>
+
+            <div className="hide-scroll" style={{ background: CARD, border: `0.5px solid ${LINE}`, padding: "20px 12px", borderRadius: 14, overflowX: "auto", marginBottom: 14 }}>
+              <div style={{ fontSize: 11.5, color: SUBTLE, textAlign: "center", marginBottom: 10 }}>여러 장을 선택하시면 순차적으로 배열됩니다.</div>
+              <div style={{ textAlign: "center", marginBottom: 14 }}><button className="nf-btn ai" disabled={filled < 2} onClick={aiArrange} style={{ width: "auto", padding: "9px 18px", fontSize: 12.5 }}><Ic name="sparkles" size={14} /> AI배치</button></div>
+              <div style={{ display: "flex", flexWrap: "nowrap", gap: 14, justifyContent: "flex-start", alignItems: "flex-end", paddingBottom: 6 }}>
+                {setFrames.map((f, si) => {
+                  const a = Math.min(toIn(f.w, f.u), toIn(f.h, f.u)), b = Math.max(toIn(f.w, f.u), toIn(f.h, f.u));
+                  const c = cells[si];
+                  const PPI = 22, land = c && c.landscape, wpx = Math.round((land ? b : a) * PPI), hpx = Math.round((land ? a : b) * PPI);
+                  const pl = c && c.src ? place(wpx, hpx, c.natW, c.natH, c) : null;
+                  return (
+                    <div key={si} style={{ textAlign: "center", flexShrink: 0 }}>
+                      <div data-cellidx={si} className={`nf-cell hscroll ${selected === si ? "on" : ""} ${lockedIdx === si ? "locked" : ""} ${c && c.src ? "has" : ""}`} style={{ width: wpx, height: hpx, background: CARD, border: `1px solid ${LINE}`, borderRadius: 2, margin: "0 auto" }}
+                        onClick={() => (c && c.src ? toggleLock(si) : openPicker(si))}
+                        onPointerDown={(e) => onPointerDown(e, si)} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerLeave={onPointerUp}>
+                        {c && c.src ? (<>
+                          {selected === si && pl && <img src={c.src} alt="" draggable={false} style={{ position: "absolute", width: pl.Rw, height: pl.Rh, left: pl.left, top: pl.top, maxWidth: "none", transform: `rotate(${c.rot || 0}deg)`, transformOrigin: "center center", pointerEvents: "none", opacity: 0.32 }} />}
+                          <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+                            <img src={c.src} alt="" draggable={false} onLoad={(e) => { const w = e.target.naturalWidth, h = e.target.naturalHeight; if (c.natW !== w || c.natH !== h) updateCell(si, { natW: w, natH: h }); }}
+                              style={pl ? { position: "absolute", width: pl.Rw, height: pl.Rh, left: pl.left, top: pl.top, maxWidth: "none", transform: `rotate(${c.rot || 0}deg)`, transformOrigin: "center center", pointerEvents: "none" } : { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
+                          </div>
+                        </>) : (<div className="nf-add"><Ic name="plus" size={14} strokeWidth={1.5} /><span>추가</span></div>)}
+                      </div>
+                      <div style={{ fontSize: 11, color: SUBTLE, marginTop: 5 }}>{si + 1}. {land ? `${f.h}×${f.w}` : `${f.w}×${f.h}`}{f.u}</div>
+                      <button className="rotbtn" style={{ marginTop: 6 }} onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCells((prev) => { const next = [...prev]; next[si] = { ...next[si], landscape: !next[si].landscape }; return next; }); }}><Ic name="rotatecw" size={11} /> {c && c.landscape ? "세로로" : "가로로"}</button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {sel && sel.src ? (
+              <div className="nf-card" style={{ marginBottom: 14 }}>
+                <div className="nf-h">{selected + 1}번 액자 조정</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}><Ic name="zoomin" size={16} color={SUBTLE} /><input className="nf-range" type="range" min="1" max="3" step="0.02" value={sel.scale} onChange={(e) => updateCell(selected, { scale: parseFloat(e.target.value) })} /></div>
+                <div style={{ fontSize: 11, color: SUBTLE, textAlign: "right", marginBottom: 8 }}>배율 {sel.scale.toFixed(2)}배</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}><Ic name="rotatecw" size={16} color={SUBTLE} /><input className="nf-range" type="range" min="-180" max="180" step="1" value={sel.rot} onChange={(e) => updateCell(selected, { rot: parseInt(e.target.value) })} /></div>
+                <div style={{ fontSize: 11, color: SUBTLE, textAlign: "right", marginBottom: 8 }}>{sel.rot}°</div>
+                <div style={{ display: "flex", gap: 7, marginBottom: 8 }}>
+                  <button className="nf-icobtn" onClick={() => updateCell(selected, { rot: ((sel.rot - 90 + 540) % 360) - 180 })}><Ic name="rotateccw" size={13} /> 90°</button>
+                  <button className="nf-icobtn" onClick={() => updateCell(selected, { rot: ((sel.rot + 90 + 540) % 360) - 180 })}><Ic name="rotatecw" size={13} /> 90°</button>
+                  <button className="nf-icobtn" onClick={() => resetCell(selected)}><Ic name="refreshccw" size={13} /></button>
+                </div>
+                <div style={{ display: "flex", gap: 7 }}>
+                  <button className="nf-icobtn" onClick={() => openPicker(selected)}><Ic name="refreshcw" size={13} /> 변경</button>
+                  <button className="nf-icobtn" style={{ color: RED, borderColor: "rgba(255,69,58,0.4)" }} onClick={() => removeCell(selected)}><Ic name="trash2" size={13} /> 삭제</button>
+                </div>
+              </div>
+            ) : (
+              <div className="nf-card" style={{ textAlign: "center", color: SUBTLE, fontSize: 12.5, lineHeight: 1.8, padding: "24px 14px", marginBottom: 14 }}>위 액자를 눌러 사진을 넣고 선택하면 여기서 조정해요</div>
+            )}
+
+            <div className="nf-card" style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
+              <button className="nf-btn ghost" style={{ color: SUBTLE }} onClick={resetAll}><Ic name="rotateccw" size={14} /> 전체 초기화</button>
+              <button className="nf-btn" onClick={() => setOrderInfoOpen(true)}><Ic name="check" size={14} /> 주문정보 확인 / 수정</button>
+              <button className="nf-btn ghost emph" onClick={openSetPreview}><Ic name="zoomin" size={14} /> 미리보기</button>
+              <button className="nf-btn dark" onClick={() => { if (!form.name || !form.phone) return showToast("성함과 연락처를 입력해 주세요"); if (!consent) return showToast("개인정보 수집·이용 동의가 필요합니다"); setOrderConfirm(true); }} disabled={filled < count || !consent}><Ic name="check" size={15} /> 세트 주문하기</button>
+              {Footer()}
+            </div>
+
+            {ProdTime()}
+          </div>
+        )}
+      </div>
+
+      {sendState === "sending" && (
+        <div className="nf-overlay" style={{ flexDirection: "column", zIndex: 200 }}>
+          <div style={{ background: CARD, borderRadius: 20, padding: "30px 24px", maxWidth: 400, width: "92%", textAlign: "center" }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: INK, marginBottom: 8 }}>업로드 중 (시간이 소요됩니다)</div>
+            <div style={{ fontSize: 16, color: GOLD, fontWeight: 700, marginBottom: 16 }}>{sendMsg}</div>
+            <div style={{ fontSize: 12.5, color: SUBTLE, marginBottom: 18 }}>완료될때까지 잠시만 기다려주세요.</div>
+            <div style={{ background: TINT, border: `1px solid ${GOLD}`, borderRadius: 12, padding: "14px 15px", fontSize: 13, color: INK, lineHeight: 1.75 }}>
+              <b>구매완료 후 재구매</b> 또는 <b>친구 소개</b> 시<br />새로운 구매건에 한하여 <b style={{ color: GOLD }}>10% 할인</b>을 제공합니다.<br /><span style={{ color: SUBTLE, fontSize: 12 }}>- 주문 전 카톡으로 말씀해주세요 -</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {sendState === "done" && (
+        <div className="nf-overlay" onClick={() => { setSendState(null); goIntro(); }} style={{ zIndex: 200 }}>
+          <div className="nf-modal" onClick={(e) => e.stopPropagation()} style={{ textAlign: "center" }}>
+            <div style={{ width: 56, height: 56, borderRadius: "50%", background: TINT, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}><i className="ti ti-circle-check" style={{ fontSize: 28, color: GOLD }} aria-hidden="true" /></div>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: INK }}>업로드가 완료되었습니다.</div>
+            <div style={{ fontSize: 13, color: SUBTLE, marginBottom: 20 }}>주문이 정상 접수되었어요. 감사합니다!<br />급작업이 필요한 경우 카톡으로 연락주세요.</div>
+            {!setKind && layout.cuts === 1 && (
+              <div style={{ background: TINT, borderRadius: 12, padding: "14px 15px", marginBottom: 16, textAlign: "center" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: INK, marginBottom: 4 }}>6p 구성으로 이어가시겠어요?</div>
+                <div style={{ fontSize: 11.5, color: SUBTLE, marginBottom: 12, lineHeight: 1.5 }}>지금 이어서 5p 미니세트를 담으시면<br />대형액자 1개 + 미니세트 5p, 총 6p 구성이 완성돼요.</div>
+                <button className="nf-btn dark" onClick={() => { setSendState(null); chooseSet("5p"); }}>5p 미니세트 이어서 담기</button>
+              </div>
+            )}
+            <button className={`nf-btn ${!setKind && layout.cuts === 1 ? "ghost" : "dark"}`} onClick={() => { setSendState(null); goIntro(); }}>확인</button>
+          </div>
+        </div>
+      )}
+
+      {orderConfirm && (
+        <div className="nf-overlay" onClick={() => setOrderConfirm(false)}>
+          <div className="nf-modal" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}><div style={{ width: 52, height: 52, borderRadius: "50%", background: DANGER_TINT, display: "flex", alignItems: "center", justifyContent: "center" }}><i className="ti ti-alert-triangle" style={{ fontSize: 24, color: RED }} aria-hidden="true" /></div></div>
+            <div style={{ textAlign: "center", fontSize: 15.5, fontWeight: 700, marginBottom: 12, color: INK }}>미리보기로 확인하셨나요?</div>
+            <div style={{ border: `1px solid ${RED}`, borderRadius: 10, background: DANGER_TINT, padding: "10px 12px", marginBottom: 14, textAlign: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: RED }}><i className="ti ti-alert-triangle" style={{ fontSize: 14 }} aria-hidden="true" />본 페이지는 주문 페이지가 아닙니다</div>
+              <div style={{ fontSize: 11.5, color: INK, marginTop: 4, lineHeight: 1.5 }}>스마트스토어 또는 자사몰에서 주문하신 상품의 사진 파일을 업로드하는 클라우드입니다.</div>
+            </div>
+            <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.8, background: LINE, borderRadius: 12, padding: "13px 15px", marginBottom: 18, textAlign: "center" }}>
+              주문 이후에는 <b style={{ color: RED }}>사진 배치 수정이 불가</b>합니다. 재배치가 필요하시면 <b>재배치 후</b> 주문 버튼을 눌러주세요.
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="nf-btn" onClick={() => setOrderConfirm(false)}>재수정하기</button>
+              <button className="nf-btn dark" onClick={() => { setOrderConfirm(false); (setKind ? submitSet : submitOrder)(); }}>확인</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {orderInfoOpen && (
+        <div className="nf-overlay" style={{ zIndex: 120 }}>
+          <div className="nf-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440, maxHeight: "90vh", overflow: "auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <div className="nf-serif" style={{ fontSize: 19, fontWeight: 700, color: INK }}>주문 정보 입력</div>
+              <button onClick={() => setOrderInfoOpen(false)} style={{ border: "none", background: LINE, width: 34, height: 34, borderRadius: 10, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: INK }}><i className="ti ti-x" style={{ fontSize: 17 }} aria-hidden="true" /></button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>{OrderInfo()}</div>
+            <button className="nf-btn dark" style={{ marginTop: 16 }} disabled={!form.name || !form.phone || !consent} onClick={() => { if (!form.name || !form.phone) return showToast("성함과 연락처를 입력해 주세요"); if (!consent) return showToast("개인정보 수집·이용 동의가 필요합니다"); setOrderInfoOpen(false); }}><Ic name="check" size={15} /> 입력 완료</button>
+          </div>
+        </div>
+      )}
+
+      {previewSrc && (
+        <div className="nf-overlay" onClick={() => setPreviewSrc(null)} style={{ flexDirection: "column", gap: 14 }}>
+          <img src={previewSrc} alt="미리보기" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "96vw", maxHeight: "72vh", boxShadow: "0 20px 60px rgba(0,0,0,0.5)", background: "#fff" }} />
+          <div style={{ color: "#fff", fontSize: 12, textAlign: "center", maxWidth: 900, lineHeight: 1.65, background: "rgba(0,0,0,0.5)", padding: "11px 16px", borderRadius: 10 }}>
+            <b style={{ color: "#ff8a80" }}>빨강 = 재단선(약 5mm)</b> · <b style={{ color: "#7cc0ff" }}>파랑 = 안전선(약 {setKind ? 8 : safeMM}mm)</b><br />
+            인물 · 손 · 발 · 관절 등 중요한 부분은 꼭 <b style={{ color: "#7cc0ff" }}>안전선(파랑) 안쪽</b>에 두세요.
+          </div>
+          <button className="nf-btn dark" style={{ width: "auto", padding: "10px 26px" }} onClick={() => setPreviewSrc(null)}>닫기</button>
+        </div>
+      )}
+
+      {showPopup && (
+        <div className="nf-overlay" onClick={() => setShowPopup(false)}>
+          <div className="nf-modal" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}><div style={{ width: 52, height: 52, borderRadius: "50%", background: DANGER_TINT, display: "flex", alignItems: "center", justifyContent: "center" }}><i className="ti ti-alert-triangle" style={{ fontSize: 24, color: RED }} aria-hidden="true" /></div></div>
+            <div style={{ textAlign: "center", fontSize: 15.5, fontWeight: 700, marginBottom: 12, color: INK }}>업로드 전 꼭 확인해 주세요</div>
+            <div style={{ fontSize: 12.5, color: INK, lineHeight: 1.85, background: LINE, borderRadius: 12, padding: "14px 15px", marginBottom: 18 }}>
+              <b style={{ color: RED }}>네이버 또는 자사몰에서 결제 정보가 확인되지 않으면</b>, 사진을 업로드하셔도 작업이 진행되지 않습니다.<br /><b>주문자명과 구매자 성함이 다를 경우 작업이 불가합니다.</b><br />액자는 모니터보다 어두워집니다. 어두운 사진은 보정요청을 해주세요.
+            </div>
+            <button className="nf-btn dark" onClick={() => { setShowPopup(false); setOrderInfoOpen(true); }}>확인했습니다</button>
+          </div>
+        </div>
+      )}
+
+      {moving && moveFromRef.current != null && cells[moveFromRef.current]?.src && (<div className="nf-ghost" style={{ left: movePos.x, top: movePos.y }}><img src={cells[moveFromRef.current].src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>)}
+      {lockedIdx != null && (screen === "build" || screen === "setBuild") && <div className="nf-lock-overlay" onClick={unlock} />}
+      {lockedIdx != null && (screen === "build" || screen === "setBuild") && <div className="nf-lock-hint">두 손가락으로 확대·회전, 한 손가락으로 이동 · 다시 누르면 잠금 해제</div>}
+      {toast && <div className="nf-toast">{toast}</div>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<NemoFrameMobile />);
+</script>
+</body>
+</html>
