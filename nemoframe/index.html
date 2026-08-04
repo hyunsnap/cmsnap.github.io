@@ -4,6 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>네모프레임 · 액자 사진 주문</title>
+<script>
+/* 휴대폰으로 들어오면 모바일 페이지(mobile/)로 보낸다.
+   이 분기가 없어서 폰에서도 PC(베이지) 화면이 열렸고, 마우스용 이동 손잡이라 순서 바꾸기 터치가 안 먹었다.
+   모바일 페이지의 "PC 버전으로 보기"( ../index.html?pc=1 )로 들어오면 넘기지 않고, 그 선택을 탭이 닫힐 때까지 기억한다.
+   화면 그리기 전에 실행돼야 깜빡임이 없으므로 <head> 맨 위에 둔다. */
+(function () {
+  try {
+    var qs = location.search || "";
+    if (/[?&]pc=1/.test(qs)) { try { sessionStorage.setItem("nf_pc", "1"); } catch (e) {} return; }
+    if (sessionStorage.getItem("nf_pc") === "1") return;
+
+    var ua = navigator.userAgent || "";
+    var phone = /Android|iPhone|iPod|IEMobile|BlackBerry|Opera Mini|Mobile Safari/i.test(ua)
+             || (/iPad|Macintosh/.test(ua) && "ontouchend" in document && Math.min(screen.width, screen.height) < 820);
+    if (!phone) return;
+
+    // 주소 끝에 '/' 가 없어도(예: /nemoframe/nemo_upload) 폴더를 올바로 계산한다
+    var p = location.pathname;
+    if (!/\/$/.test(p) && !/\.[a-z0-9]+$/i.test(p)) p += "/";
+    var dir = p.replace(/[^/]*$/, "");
+    if (/\/mobile\/$/.test(dir)) return;              // 이미 모바일 페이지면 그대로
+    location.replace(dir + "mobile/" + qs + location.hash);
+  } catch (e) { /* 문제가 생기면 그냥 PC 화면을 보여준다 */ }
+})();
+</script>
 <style>html,body{height:100%;margin:0;background:#F4EEE3;-webkit-text-size-adjust:100%}#root{min-height:100%}*{-webkit-tap-highlight-color:transparent}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
