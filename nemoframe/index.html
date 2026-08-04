@@ -4,6 +4,45 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>네모프레임 · 액자 사진 주문</title>
+<script>
+/* 폰이 이 PC 페이지에 도달했을 때만 모바일 페이지로 보내는 예비 장치.
+   서버가 이미 모바일로 분기해 주고 있다면 폰은 애초에 이 파일을 열지 않으므로 이 코드는 실행되지 않는다.
+   서버 분기가 없거나 고장난 경우에만 동작하는 안전망이다.
+
+   중요: 모바일 파일이 어느 이름/위치에 있는지 서버마다 다르므로, 먼저 실제로 있는지 확인한 뒤에만 보낸다.
+   확인 없이 보내면 파일이 없을 때 404 가 떠서 베이지 화면보다 나빠진다.
+   후보를 순서대로 찾아보고 하나도 없으면 아무것도 하지 않고 이 PC 화면을 그대로 보여준다. */
+(function () {
+  try {
+    var qs = location.search || "";
+    if (/[?&]pc=1/.test(qs)) { try { sessionStorage.setItem("nf_pc", "1"); } catch (e) {} return; }
+    try { if (sessionStorage.getItem("nf_pc") === "1") return; } catch (e) {}
+
+    var ua = navigator.userAgent || "";
+    var phone = /Android|iPhone|iPod|IEMobile|BlackBerry|Opera Mini|Mobile Safari/i.test(ua)
+             || (/iPad|Macintosh/.test(ua) && "ontouchend" in document && Math.min(screen.width, screen.height) < 820);
+    if (!phone) return;
+
+    // 주소 끝에 '/' 가 없어도(예: /nemoframe/nemo_upload) 폴더를 올바로 계산
+    var p = location.pathname;
+    if (!/\/$/.test(p) && !/\.[a-z0-9]+$/i.test(p)) p += "/";
+    var dir = p.replace(/[^/]*$/, "");
+    if (/\/mobile\/$/.test(dir)) return;                 // 이미 모바일 페이지면 그대로 (되돌이 방지)
+
+    var candidates = [dir + "moindex.html", dir + "mobile/index.html", dir + "mobile/"];
+    (function tryNext(i) {
+      if (i >= candidates.length) return;                // 모바일 파일을 못 찾음 → PC 화면 유지
+      var url = candidates[i];
+      fetch(url, { method: "HEAD" })
+        .then(function (r) {
+          if (r && r.ok) location.replace(url + qs + location.hash);
+          else tryNext(i + 1);
+        })
+        .catch(function () { tryNext(i + 1); });
+    })(0);
+  } catch (e) { /* 문제가 생기면 그냥 PC 화면 */ }
+})();
+</script>
 <style>html,body{height:100%;margin:0;background:#F4EEE3;-webkit-text-size-adjust:100%}#root{min-height:100%}*{-webkit-tap-highlight-color:transparent}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
