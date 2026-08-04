@@ -256,7 +256,8 @@ function NemoFrameMobile() {
     src: file,
     onError: (e) => {
       const t = e.target;
-      const alts = ["nemo_upload/" + file, "/nemoframe/" + file, "/nemoframe/nemo_upload/" + file];
+      // 이 파일이 mobile/ 폴더 안에 있으면 예시사진은 한 단계 위에 있으므로 "../" 도 후보에 넣는다
+      const alts = ["../" + file, "nemo_upload/" + file, "/nemoframe/nemo_upload/" + file, "/nemoframe/" + file];
       const n = Number(t.dataset.exTry || 0);
       if (n < alts.length) { t.dataset.exTry = String(n + 1); t.src = alts[n]; }
       else { t.style.display = "none"; }   // 어디에도 없으면 깨진 아이콘 대신 조용히 숨김
