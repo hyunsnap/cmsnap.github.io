@@ -246,6 +246,23 @@ function NemoFrameMobile() {
   // 정수 픽셀로 반올림하면(최종 인화파일=캔버스는 정수 픽셀이 필요해서 그렇게 함) 미리보기 화면 크기(작음) 기준으로는
   // 그 반올림 오차가 비율적으로 더 크게 느껴짐. 미리보기는 캔버스가 아니라 CSS라 소수점 px도 정확히 그려지므로,
   // 반올림하지 않고 모든 칸에 동일한 소수점 크기를 그대로 써서 물리적 비율과 최대한 가깝게 맞춘다(오차를 최소화).
+  // ===== 제작 예시사진 경로 =====
+  // 손님이 여는 주소가 .../nemoframe/nemo_upload 처럼 끝에 '/' 가 없으면, 브라우저는 상대경로
+  // "example/w1.jpg" 를 한 단계 위인 /nemoframe/example/w1.jpg 로 찾아가서 404 가 난다.
+  // (끝에 '/' 를 붙여 들어온 손님만 사진이 보이는, 들쭉날쭉한 증상이 됨)
+  // 그래서 후보 경로를 차례로 시도해 실제로 있는 파일을 찾아 쓰도록 한다.
+  const exampleImg = (file) => ({
+    key: file,                       // 간격을 바꾸면 새로 붙여서 재시도 카운트를 초기화
+    src: file,
+    onError: (e) => {
+      const t = e.target;
+      const alts = ["nemo_upload/" + file, "/nemoframe/" + file, "/nemoframe/nemo_upload/" + file];
+      const n = Number(t.dataset.exTry || 0);
+      if (n < alts.length) { t.dataset.exTry = String(n + 1); t.src = alts[n]; }
+      else { t.style.display = "none"; }   // 어디에도 없으면 깨진 아이콘 대신 조용히 숨김
+    },
+  });
+
   const gridMmToPx = (gridSize.w && fwIn) ? gridSize.w / (fwIn * 25.4) : 0;
   const gridMetrics = {
     mountPad: gridMmToPx * 5,
@@ -1131,7 +1148,7 @@ function NemoFrameMobile() {
               ) : isArtview ? (
                 <>
                   <div style={{ fontSize: 12, color: SUBTLE, lineHeight: 1.6 }}>사진 사이 <b style={{ color: INK }}>4mm 간격</b>으로 고정 제작돼요. <span style={{ color: MUTED }}>(간격색 = 테두리색)</span></div>
-                  <img src="example/at3.jpg" alt="아트뷰 제작 예시" style={{ width: "100%", borderRadius: 8, marginTop: 10, display: "block" }} />
+                  <img {...exampleImg("example/at3.jpg")} alt="아트뷰 제작 예시" style={{ width: "100%", borderRadius: 8, marginTop: 10, display: "block" }} />
                 </>
               ) : isWood9 ? (
                 <>
@@ -1142,7 +1159,7 @@ function NemoFrameMobile() {
                     ))}
                   </div>
                   <div style={{ fontSize: 11.5, color: SUBTLE, marginBottom: 10 }}>바깥 여백 {(wOuterSide / 10).toFixed(1)}cm · 사진 사이 {(wInner / 10).toFixed(1)}cm</div>
-                  <img src={`example/w${woodGapIdx}.jpg`} alt={`우드 ${WOOD_GAPS[woodGapIdx].label} 제작 예시`} style={{ width: "100%", borderRadius: 8, display: "block" }} />
+                  <img {...exampleImg(`example/w${woodGapIdx}.jpg`)} alt={`우드 ${WOOD_GAPS[woodGapIdx].label} 제작 예시`} style={{ width: "100%", borderRadius: 8, display: "block" }} />
                 </>
               ) : (
                 <>
