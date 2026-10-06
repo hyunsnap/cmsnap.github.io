@@ -174,7 +174,9 @@ function NemoFrameMobile() {
   const [portfolioConsent, setPortfolioConsent] = useState(false);  // [선택] 완성품 포트폴리오 동의 → 액자가방 무료증정(6천원 상당)
   const [portfolioConsentOpen, setPortfolioConsentOpen] = useState(false);
   const [showGiftPopup, setShowGiftPopup] = useState(false);        // 포트폴리오 동의 체크 시 안내 팝업 1회 표시
-  const [previewWarn, setPreviewWarn] = useState(null);             // 동의 안 한 채 미리보기를 누르면 먼저 경고 ("frame" | "set")
+  // 필수 항목이 비었을 때 토스트 대신 띄우는 경고창.
+  // { need: "info"|"consent", preview: null|"frame"|"set" }  — preview 가 있으면 "미리보기 계속" 버튼도 보여준다.
+  const [warnNeed, setWarnNeed] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [orderInfoOpen, setOrderInfoOpen] = useState(false);
   const [toast, setToast] = useState(null);
@@ -1242,8 +1244,8 @@ function NemoFrameMobile() {
             <div className="nf-card" style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
               <button className="nf-btn ghost" style={{ color: SUBTLE }} onClick={resetAll}><Ic name="rotateccw" size={14} /> 전체 초기화</button>
               <button className="nf-btn" onClick={() => setOrderInfoOpen(true)}><Ic name="check" size={14} /> 성함·연락처 확인/수정</button>
-              <button className="nf-btn ghost emph" onClick={() => (consent ? openPreview() : setPreviewWarn("frame"))}><Ic name="zoomin" size={14} /> 미리보기</button>
-              <button className="nf-btn dark" onClick={() => { if (filled < count) return showToast(`아직 ${count - filled}칸이 비어 있어요`); if (!form.name || !form.phone) return showToast("성함과 연락처를 입력해 주세요 (성함·연락처 확인/수정)"); if (!consent) return showToast("개인정보 수집·이용 동의에 체크해 주세요"); setOrderConfirm(true); }}><Ic name="check" size={15} /> 파일 업로드하기</button>
+              <button className="nf-btn ghost emph" onClick={() => (consent ? openPreview() : setWarnNeed({ need: "consent", preview: "frame" }))}><Ic name="zoomin" size={14} /> 미리보기</button>
+              <button className="nf-btn dark" onClick={() => { if (filled < count) return showToast(`아직 ${count - filled}칸이 비어 있어요`); if (!form.name || !form.phone) return setWarnNeed({ need: "info", preview: null }); if (!consent) return setWarnNeed({ need: "consent", preview: null }); setOrderConfirm(true); }}><Ic name="check" size={15} /> 파일 업로드하기</button>
               {Footer()}
             </div>
 
@@ -1360,8 +1362,8 @@ function NemoFrameMobile() {
             <div className="nf-card" style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
               <button className="nf-btn ghost" style={{ color: SUBTLE }} onClick={resetAll}><Ic name="rotateccw" size={14} /> 전체 초기화</button>
               <button className="nf-btn" onClick={() => setOrderInfoOpen(true)}><Ic name="check" size={14} /> 성함·연락처 확인/수정</button>
-              <button className="nf-btn ghost emph" onClick={() => (consent ? openSetPreview() : setPreviewWarn("set"))}><Ic name="zoomin" size={14} /> 미리보기</button>
-              <button className="nf-btn dark" onClick={() => { if (filled < count) return showToast(`아직 ${count - filled}칸이 비어 있어요`); if (!form.name || !form.phone) return showToast("성함과 연락처를 입력해 주세요 (성함·연락처 확인/수정)"); if (!consent) return showToast("개인정보 수집·이용 동의에 체크해 주세요"); setOrderConfirm(true); }}><Ic name="check" size={15} /> 세트 주문하기</button>
+              <button className="nf-btn ghost emph" onClick={() => (consent ? openSetPreview() : setWarnNeed({ need: "consent", preview: "set" }))}><Ic name="zoomin" size={14} /> 미리보기</button>
+              <button className="nf-btn dark" onClick={() => { if (filled < count) return showToast(`아직 ${count - filled}칸이 비어 있어요`); if (!form.name || !form.phone) return setWarnNeed({ need: "info", preview: null }); if (!consent) return setWarnNeed({ need: "consent", preview: null }); setOrderConfirm(true); }}><Ic name="check" size={15} /> 세트 주문하기</button>
               {Footer()}
             </div>
 
@@ -1470,18 +1472,27 @@ function NemoFrameMobile() {
         </div>
       )}
 
-      {previewWarn && (
+      {warnNeed && (
         <div className="nf-overlay" style={{ zIndex: 240 }}>
           <div className="nf-modal" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}><div style={{ width: 56, height: 56, borderRadius: "50%", background: DANGER_TINT, display: "flex", alignItems: "center", justifyContent: "center" }}><Ic name="alerttriangle" size={26} color={RED} /></div></div>
-            <div style={{ textAlign: "center", fontSize: 16, fontWeight: 700, marginBottom: 12, color: INK }}>개인정보 수집·이용 동의가 필요합니다</div>
+            <div style={{ textAlign: "center", fontSize: 16, fontWeight: 700, marginBottom: 12, color: INK }}>
+              {warnNeed.need === "info" ? "성함과 연락처를 입력해 주세요" : "개인정보 수집·이용 동의가 필요합니다"}
+            </div>
             <div style={{ fontSize: 13, color: INK, lineHeight: 1.8, background: DANGER_TINT, borderRadius: 12, padding: "14px 16px", marginBottom: 14, textAlign: "center" }}>
-              <b style={{ color: RED }}>[필수] 개인정보 수집·이용 동의</b>에 체크하지 않으면<br />주문 파일을 업로드할 수 없습니다.<br />
-              <span style={{ color: SUBTLE }}>'성함·연락처 확인/수정'에서 체크해 주세요.</span>
+              {warnNeed.need === "info" ? (<>
+                <b style={{ color: RED }}>주문자 성함과 연락처</b>를 입력하지 않으면<br />주문 파일을 업로드할 수 없습니다.
+              </>) : (<>
+                <b style={{ color: RED }}>[필수] 개인정보 수집·이용 동의</b>에 체크하지 않으면<br />주문 파일을 업로드할 수 없습니다.
+              </>)}
+              <br /><span style={{ color: SUBTLE }}>아래 '성함·연락처 확인/수정'에서 바로 하실 수 있어요.</span>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="nf-btn ghost" style={{ flex: 1 }} onClick={() => { const k = previewWarn; setPreviewWarn(null); (k === "set" ? openSetPreview : openPreview)(); }}>미리보기 계속</button>
-              <button className="nf-btn dark" style={{ flex: 1 }} onClick={() => { setPreviewWarn(null); setOrderInfoOpen(true); }}>동의하러 가기</button>
+              {warnNeed.preview && <button className="nf-btn ghost" style={{ flex: 1 }} onClick={() => { const k = warnNeed.preview; setWarnNeed(null); (k === "set" ? openSetPreview : openPreview)(); }}>미리보기 계속</button>}
+              {!warnNeed.preview && <button className="nf-btn ghost" style={{ flex: 1 }} onClick={() => setWarnNeed(null)}>닫기</button>}
+              <button className="nf-btn dark" style={{ flex: 1 }} onClick={() => { setWarnNeed(null); setOrderInfoOpen(true); }}>
+                {warnNeed.need === "info" ? "입력하러 가기" : "동의하러 가기"}
+              </button>
             </div>
           </div>
         </div>
